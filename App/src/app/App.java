@@ -20,7 +20,30 @@ import jade.wrapper.StaleProxyException;
 
 public class App {
     Runtime rt;
-    ContainerController container;
+    static ContainerController container;
+
+    public static void main(String[] args) {
+        App a = new App();
+
+        a.initMainContainerInPlatform("localhost", "9888", "MainContainer");
+        int num_aeroportos=10,num_avioes=3;
+        for(int i = 0;i<num_aeroportos;i++){
+            ContainerController aeroportox = a.initContainerInPlatform("localhost", "9888", "Aeroporto"+i);
+            Object[] arguments = new Object[1];
+            arguments[0] = i;
+            a.startAgentInPlatform(aeroportox,"Aeroporto"+i, "Agents.Aeroporto",arguments);
+            // Let all Aeroports be ready
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            for(int j = 0; j<num_avioes;j++){
+                a.startAgentInPlatform(aeroportox,"Aviao"+((num_avioes*i)+j), "Agents.Aviao");
+            }
+        }
+    }
 
     public ContainerController initContainerInPlatform(String host, String port, String containerName) {
         // Get the JADE runtime interface (singleton)
@@ -54,7 +77,7 @@ public class App {
         rt.setCloseVM(true);
     }
 
-    public void startAgentInPlatform(String name, String classpath) {
+    public void startAgentInPlatform(ContainerController container,String name, String classpath) {
         try {
                 AgentController ac = container.createNewAgent(name, classpath, new Object[0]);
                 ac.start();
@@ -62,46 +85,12 @@ public class App {
                 e.printStackTrace();
         }
     }
-    public static void main(String[] args) {
-        App a = new App();
-
-        a.initMainContainerInPlatform("localhost", "9888", "MainContainer");
-
-        a.startAgentInPlatform("Manager", "Agents.Manager");
-
-        int n;
-        int limit_taxis = 5; // Limit number of Taxis
-
-        // Start Agents Taxis!
-        for (n = 0; n < limit_taxis; n++) {
-            a.startAgentInPlatform("Taxi" + n, "Agents.Taxi");
-            n++;
-        }
-
-        // Let all Taxis be ready
+    public void startAgentInPlatform(ContainerController container,String name, String classpath,Object[] args) {
         try {
-            Thread.sleep(500);
-        } catch (InterruptedException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-
-        // Start first 10 Agents Customers!
-        for (n = 0; n < 10; n++) {
-            a.startAgentInPlatform("Customer" + n, "Agents.Customer");
-            n++;
-        }
-
-        int limit_customers = 100; // Limit number of Customers
-        // Start Agents Customers!
-        for (n = 10; n < limit_customers; n++) {
-            try {
-                a.startAgentInPlatform("Customer" + n, "Agents.Customer");
-                Thread.sleep(1000);
-                n++;
-            } catch (InterruptedException e) {
+                AgentController ac = container.createNewAgent(name, classpath, args);
+                ac.start();
+        } catch (Exception e) {
                 e.printStackTrace();
-            }
         }
     }
     
