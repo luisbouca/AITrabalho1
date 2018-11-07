@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Model;
+package Models;
 
 /**
  *
@@ -11,6 +11,7 @@ package Model;
  */
 import jade.core.AID;
 import java.util.Date;
+import java.util.Random;
 
 public class Flight {
     private String identification;
@@ -28,7 +29,7 @@ public class Flight {
     //private List<> interations; missing interactions Class
 
     public Flight(String idAirport, AID airplane, int passagers, int[] destination, int[] departure, int speed, String location, int fuel) {
-        this.identification = idAirport+"RandomString";
+        this.identification = idAirport+"Airport:"+ new Random().nextInt(100000);
         this.airplane = airplane;
         this.passagers = passagers;
         this.destination = destination;

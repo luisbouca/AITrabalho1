@@ -13,7 +13,7 @@ import java.util.Random;
  * @author user
  */
 
-public class Aviao extends Agent{
+public class Airplane extends Agent{
 
     private String make;
     private String model;
@@ -67,7 +67,7 @@ public class Aviao extends Agent{
         max_speed = random.nextInt((10)-(3)+1)-(3);
         max_fuel = random.nextInt((100)-(50)+1)-(50);
         safety_area = max_speed *5;
-        super.setup(); //To change body of generated methods, choose Tools | Templates.
+        super.setup();
     }
 
     

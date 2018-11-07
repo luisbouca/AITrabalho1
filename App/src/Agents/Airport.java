@@ -5,9 +5,9 @@
  */
 package Agents;
 
-import Model.Flight;
-import Model.Track;
-import Model.Operation;
+import Models.Flight;
+import Models.Track;
+import Models.Operation;
 import jade.core.Agent;
 import java.util.Random;
 import jade.core.AID;
@@ -19,7 +19,7 @@ import java.util.List;
  * @author user
  */
 
-public class Aeroporto extends Agent{
+public class Airport extends Agent{
 
     private String name;
     private String location;
@@ -40,8 +40,8 @@ public class Aeroporto extends Agent{
         String[] locations = new String[]{"Lisboa","Faro","Porto"};
         location = locations[randomint];
         max_airplanes = random.nextInt(((10)-4)+1)-4;
-        int numpistas = random.nextInt(((10)-4)+1)-4;
-        for(int i = 0; i<numpistas ;i++){
+        int numtracks = random.nextInt(((10)-4)+1)-4;
+        for(int i = 0; i<numtracks ;i++){
             allocated_tracks.add(new Track("Track"+i,i%2));
         }
         max_airplanes = random.nextInt((10)-4+1)-4;
