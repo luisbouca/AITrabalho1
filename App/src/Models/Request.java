@@ -1,26 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Models;
 
 import jade.core.AID;
 
-/**
- *
- * @author user
- */
-public class Request extends Comunication{
+public class Request extends Communication{
     private Flight flight;
+    private int type;
 
-    public Request(String identification, AID sender, AID receiver, Flight flight) {
+    public Request(String identification, AID sender, AID receiver, Flight flight, int type) {
         super(identification, sender, receiver);
         this.flight = flight;
+        this.type = type;
     }
-
-    public Flight getFlight() {
-        return flight;
-    }    
-    
 }
