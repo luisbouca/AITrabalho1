@@ -20,6 +20,9 @@ public class Operation {
         this.order = order;
     }
     
+    public Request getRequest() {
+        return req;
+    }
 
     public Order getOrder() {
         return order;

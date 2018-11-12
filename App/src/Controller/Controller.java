@@ -58,6 +58,7 @@ public class Controller {
             int airport_number = ContainerControllers.indexOf(container);
             Object[] arguments = new Object[1];
             arguments[0] = airport_number;
+            arguments[1] = num_airports;
             
             
             //Creates a group of airplanes per subcontainer.

@@ -1,5 +1,6 @@
 package Agents;
 
+import Models.Flight;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -13,6 +14,7 @@ public class Airplane extends Agent {
 
     private String make;
     private String model;
+    private Flight flight;
     private int max_passanger;
     private int max_speed;//km/s(1 unidade = 10km)(1s = 1h)
     private int max_fuel;
