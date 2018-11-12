@@ -9,6 +9,7 @@ import java.util.Random;
 import jade.core.AID;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.ParallelBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -59,7 +60,7 @@ public class Airport extends Agent {
         int arg1 = (int) args[0];
 
         //select name of this airport
-        String[] names = new String[]{"Lisboa", "Faro", "Porto","","","","","","",""};
+        String[] names = new String[]{"Lisboa", "Faro", "Porto","test1","teste2","teste3","teste4","teste5","teste6","teste7"};
         name = names[arg1];
 
         //calculate the maximum number of airplanes with a minimum of 4 and maximum of 10
@@ -152,8 +153,24 @@ public class Airport extends Agent {
             message.addReceiver(airplane);
             message.setContent(location[0]+","+location[1]);
             myAgent.send(message);
+        }
+    }
 
+    private class CheckOperations extends TickerBehaviour{
+
+        public CheckOperations(Agent a, long period) {
+            super(a, period);
         }
 
+        @Override
+        protected void onTick() {
+            //assign flight to free airplane
+            
+            //ativate Takeoff operation
+
+            //ativate Landing operation
+
+        }
+        
     }
 }

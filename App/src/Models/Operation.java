@@ -9,12 +9,17 @@ public class Operation {
     private Order order;
 
 
-    public Operation(Request req,int priority,Order order) {
+    public Operation(Request req,int priority) {
         date = new Date();
         this.req = req;
         this.priority = priority;
         this.order = order;
     }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+    
 
     public Order getOrder() {
         return order;
