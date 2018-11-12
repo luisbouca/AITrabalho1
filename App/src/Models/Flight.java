@@ -1,14 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Models;
 
-/**
- *
- * @author user
- */
 import jade.core.AID;
 import java.util.Date;
 import java.util.Random;
@@ -22,20 +13,20 @@ public class Flight {
     private int duration;
     private Date date;
     private int speed;
-    private String location;
+    private AID airport;
     private int fuel;
     private int state;
     private float distance;
     //private List<> interations; missing interactions Class
 
-    public Flight(String idAirport, AID airplane, int passagers, int[] destination, int[] departure, int speed, String location, int fuel) {
+    public Flight(String idAirport, AID airplane, int passagers, int[] destination, int[] departure, int speed, AID airport, int fuel) {
         this.identification = idAirport+"Airport:"+ new Random().nextInt(100000);
         this.airplane = airplane;
         this.passagers = passagers;
         this.destination = destination;
         this.departure = departure;
         this.speed = speed;
-        this.location = location;
+        this.airport = airport;
         this.fuel = fuel;
         state = 0;
         date = new Date();
@@ -75,8 +66,8 @@ public class Flight {
         return speed;
     }
 
-    public String getLocation() {
-        return location;
+    public AID getAirport() {
+        return airport;
     }
 
     public int getFuel() {

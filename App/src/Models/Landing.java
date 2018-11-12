@@ -2,11 +2,12 @@ package Models;
 
 import jade.core.AID;
 
-public class TakeOff {
+public class Landing{
     private int priority;
     private Track track;
 
-    public TakeOff( int priority, Track track) {
+    public Landing(int priority, Track track) {
+        
         this.priority = priority;
         this.track = track;
     }

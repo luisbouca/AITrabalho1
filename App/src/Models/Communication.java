@@ -1,24 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package Models;
 
 import java.util.Date;
 import jade.core.AID;
 
-/**
- *
- * @author user
- */
-public class Comunication {
+public class Communication {
     private String identification;
     private AID sender;
     private AID receiver;
     private Date date;
 
-    public Comunication(String identification, AID sender, AID receiver) {
+    public Communication(String identification, AID sender, AID receiver) {
         this.identification = identification;
         this.sender = sender;
         this.receiver = receiver;

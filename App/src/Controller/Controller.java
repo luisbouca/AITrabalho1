@@ -53,11 +53,16 @@ public class Controller {
         //for each sub container, is necessary to add a single agent with airport role, and multiple agents with airplane role.
         for(ContainerController container : ContainerControllers)
         {
+            
+            //Arguments to be passed
             int airport_number = ContainerControllers.indexOf(container);
+            Object[] arguments = new Object[1];
+            arguments[0] = airport_number;
+            
             
             //Creates a group of airplanes per subcontainer.
             for(int i = 0; i < num_airplanes; i++)
-                mainContainer.startAgentInPlatform(container,"Airplane_"+((num_airplanes*airport_number)+i), "Agents.Airplane");
+                mainContainer.startAgentInPlatform(container,"Airplane_"+((num_airplanes*airport_number)+i), "Agents.Airplane",arguments);
             
             // Let all Airplanes be ready
             try {
@@ -66,9 +71,6 @@ public class Controller {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
-            //Arguments to be passed to the airport
-            Object[] arguments = new Object[1];
-            arguments[0] = airport_number;
             //Creates a agent with airport role per subcontainer.
             mainContainer.startAgentInPlatform(container,"Airport_"+airport_number, "Agents.Airport",arguments);
         }
