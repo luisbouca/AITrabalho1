@@ -10,5 +10,9 @@ public class Order extends Communication {
         this.flight = flight;
     }   
     
-    
+    public Flight getFlight()
+    {
+        return this.flight;
+    }
+   
 }
