@@ -34,6 +34,10 @@ public class Flight {
         duration = (int) (distance/speed);
     }
 
+    public String getMsg() {
+        return identification + "," + airplane + "," + passagers + "," + destination + "," + departure + "," + duration + "," + date + "," + speed + "," + airport + "," + fuel + "," + state + "," + distance ;
+    }
+
     public String getIdentification() {
         return identification;
     }
