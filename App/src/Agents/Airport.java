@@ -3,6 +3,7 @@ package Agents;
 import Models.Flight;
 import Models.Track;
 import Models.Operation;
+import Models.Order;
 import Models.Request;
 import Models.TakeOff;
 import jade.core.Agent;
@@ -28,6 +29,7 @@ public class Airport extends Agent {
     private int max_airplanes;
     private List<Track> allocated_tracks = new ArrayList<>();//tracks available
     private List<AID> allocated_Airplanes = new ArrayList<>();//airplanes present here
+    private List<AID> reserved_Spaces = new ArrayList<>();// airplanes that will come here
     private List<Flight> allocated_Flights = new ArrayList<>();
     private List<Operation> Operations = new ArrayList<>();//queue of operations
 
@@ -78,10 +80,8 @@ public class Airport extends Agent {
         //generate the location of the airport from the number of the airport
         location = genGPS(arg1);
         System.out.println("Sou o aeroporto" + arg1 + " tou no lat:" + location[0] + "|lon:" + location[1]);
-        //behaviour that will notify each airplane about their location and add them to the list of airplanes
-        this.addBehaviour(new getAirplanes(location, arg1));
-        this.addBehaviour(new Receiver());
-
+        
+        // add to the yellow pages
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
@@ -94,6 +94,13 @@ public class Airport extends Agent {
         } catch (FIPAException e) {
             e.printStackTrace();
         }
+        //behaviour that will notify each airplane about their location and add them to the list of airplanes
+        this.addBehaviour(new getAirplanes(location, arg1));
+        //receiver behaviour that will handle every message received
+        this.addBehaviour(new Receiver());
+        //ticker behaviour, will handle the queue and flight assignment
+        this.addBehaviour(new CheckOperations(this, 15000));
+        
         super.setup();
     }
 
@@ -135,7 +142,6 @@ public class Airport extends Agent {
 
                     @Override
                     public int onEnd() {
-                        System.out.println("All Airplanes inquired.");
                         return super.onEnd();
                     }
                 };
@@ -157,6 +163,7 @@ public class Airport extends Agent {
 
         private int numAeroportosProcessados = 0;
         List<List<Integer>> what = new ArrayList<List<Integer>>();
+        List<AID> airports = new ArrayList<>();
         Random rand = new Random();
 
         public Receiver() {
@@ -165,61 +172,74 @@ public class Airport extends Agent {
         @Override
         public void action() {
             ACLMessage msg = receive();
-            ACLMessage resp;
             if (msg != null) {
                 if (msg.getPerformative() == ACLMessage.CFP) {
-                    if (allocated_Airplanes.size() <= max_airplanes) {
+                        ACLMessage resp = msg.createReply();
+                        resp.setPerformative(jade.lang.acl.ACLMessage.INFORM_IF);
+                        if ((allocated_Airplanes.size()+reserved_Spaces.size()) <= max_airplanes) {
 
-                        System.out.println("Sou o aeroporto: " + getLocalName() + "e recebi pedido do: " + msg.getSender());
-                        resp = msg.createReply();
-                        resp.setContent(location[0] + "," + location[1] + "," + msg.getContent());
-                        System.out.println("As tuas coordenadas de destino são" + location[0] + "," + location[1]);
-                        resp.setPerformative(jade.lang.acl.ACLMessage.INFORM_IF);
+                            System.out.println("Sou o aeroporto: " + getLocalName() + "e recebi pedido do: " + msg.getSender().getLocalName());
+                            resp.setContent(location[0] + "," + location[1] + "," + msg.getContent());
+                        } else {
+                            resp.setContent("no");
+                        }
                         send(resp);
-                    } else {
-                        resp = msg.createReply();
-                        resp.setContent("no");
-                        resp.setPerformative(jade.lang.acl.ACLMessage.INFORM_IF);
-                        send(resp);
-                    }
                 } else if (msg.getPerformative() == ACLMessage.INFORM_IF) {
                     numAeroportosProcessados++;
+                    System.out.println(getLocalName()+": inquire received"+(numAeroportosProcessados) +","+(arg2-1));
                     if (!msg.getContent().equals("no")) {
                         String[] info = msg.getContent().split(",");
                         List<Integer> sub = new ArrayList<>();
                         sub.add(Integer.parseInt(info[0]));
                         sub.add(Integer.parseInt(info[1]));
                         sub.add(Integer.parseInt(info[2]));
+                        airports.add(msg.getSender());
                         what.add(sub);
-                    }
-                    if (numAeroportosProcessados == arg2) {
+                    }                    
+                    if (numAeroportosProcessados >= arg2-1) {
                         int[] destino = new int[2];
                         int[] origem = {location[0], location[1]};
-                        int tmp;
-                        List<Integer> please = what.get(rand.nextInt(what.size()));
+                        int tmp,rando;
+                        rando = rand.nextInt(what.size());
+                        List<Integer> please = what.get(rando);
                         tmp = please.get(0);
                         destino[0] = tmp;
                         tmp = please.get(1);
                         destino[1] = tmp;
                         tmp = please.get(2);
                         int passengers = rand.nextInt((100 - 50 + 1) + 50);
-                        Flight flight = new Flight(String.valueOf(arg1), allocated_Airplanes.get(tmp), passengers, destino, origem, 100, msg.getSender(), 50);
-                        Request req = new Request("POCARALHO",getAID(),allocated_Airplanes.get(tmp),flight,0);
-                        Operation op = new Operation(req,1);
-                        Operations.add(op);
-
-                        resp = msg.createReply();
-                        resp.setContent(flight.getMsg());
-                        resp.addReceiver(msg.getSender());
-                        send(resp);
+                        Flight flight = new Flight(String.valueOf(arg1), allocated_Airplanes.get(tmp), passengers, destino, origem, 100, airports.get(rando), 50);
+                        for(int i = 0; i<Operations.size();i++){
+                            Operation op = Operations.get(i);
+                            if(op.getRequest().getReceiver().equals(allocated_Airplanes.get(tmp))&& op.getRequest().getSender().equals(getAID())){
+                                Operations.get(i).setType(0);
+                                Operations.get(i).setFlight(flight);
+                                break;
+                            }
+                        }
+                        //To airport destination
+                        ACLMessage msg1 = new ACLMessage();
+                        msg1.setPerformative(ACLMessage.CONFIRM);
+                        msg1.setContent(""+flight.getAirplane());
+                        msg1.addReceiver(airports.get(rando));
+                        send(msg1);
+                        //to airplane
                         ACLMessage msg2 = new ACLMessage();
+                        msg2.setPerformative(ACLMessage.INFORM);
                         msg2.setContent(flight.getMsg());
                         msg2.addReceiver(allocated_Airplanes.get(tmp));
                         send(msg2);
+                        numAeroportosProcessados = 0;
+                        what.removeAll(what);
+                        System.out.println("Airport"+arg1+" assigned Airport"+flight.getAirport().getLocalName()+" to airplane"+tmp+"::"+flight.getAirplane().getLocalName());
                     }
+                }else if (msg.getPerformative() == ACLMessage.CONFIRM) {
+                    reserved_Spaces.add(new AID(msg.getContent()));
+                    System.out.println(getLocalName()+" reserved 1 space");
                 }
+            }else{
+                block();
             }
-            block();
 
         }
     }
@@ -254,13 +274,17 @@ public class Airport extends Agent {
         protected void onTick() {
             //assign flight to free airplane
             List<Integer> lista = new ArrayList<>();
-            for (int i = 0; i < allocated_Airplanes.size(); i++) {
+            lab1: for (int i = 0; i < allocated_Airplanes.size(); i++) {
                 lista.add(0);
                 for (int j = 0; j < Operations.size(); j++) {
                     if (allocated_Airplanes.get(i).equals(Operations.get(j).getRequest().getReceiver())) {
                         lista.set(i, 1);
+                        continue lab1;
                     }
                 }
+            }
+            for (int i = 0; i < lista.size(); i++) {
+                System.out.println(allocated_Airplanes.get(i).getLocalName()+":"+lista.get(i));
             }
 
             for (int i = 0; i < lista.size(); i++) {
@@ -268,6 +292,9 @@ public class Airport extends Agent {
                     ACLMessage message = new ACLMessage(ACLMessage.CFP);//TODO change this maybe
                     //message.addReceiver(airplane);
                     message.setContent(String.valueOf(i));
+                    Request req = new Request(arg1+"REQ"+new Random().nextInt(1000000),getAID(),allocated_Airplanes.get(i),0);
+                    Operation op = new Operation(req,-1);
+                    Operations.add(op);
                     for (int j = 0; j < arg2; j++) {
                         if (j != arg1) {
                             DFAgentDescription template = new DFAgentDescription();
@@ -276,15 +303,13 @@ public class Airport extends Agent {
                             template.addServices(sd);
 
                             DFAgentDescription[] result;
-
+                            
                             try {
                                 result = DFService.search(myAgent, template);
                                 AID airports;
-                                airports = new AID();
                                 if (result.length != 0) {
                                     airports = result[0].getName();
                                     message.addReceiver(airports);
-                                    myAgent.send(message);
                                 }
 
                             } catch (FIPAException e) {
@@ -292,11 +317,39 @@ public class Airport extends Agent {
                             }
                         }
                     }
-                    break;
+                    myAgent.send(message);
+                    i = lista.size();
                 }
             }
 
+            //sort operations into 2 lists
+            List<Operation> takeoff = new ArrayList<>();
+            List<Operation> landing = new ArrayList<>();
+            for(int i = 0; i<Operations.size();i++){
+                if(Operations.get(i).getRequest().getType()== 0){
+                    if(Operations.get(i).getType()==0){
+                        takeoff.add(Operations.get(i));
+                    }
+                }else{
+                    if(Operations.get(i).getType()==0){
+                        landing.add(Operations.get(i));
+                    }
+                }
+            }
             //ativate Takeoff operation
+            if(!takeoff.isEmpty()){
+                Operation opOriginal = takeoff.get(new Random().nextInt(takeoff.size()));
+                Operation op = opOriginal;
+                ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+                Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
+                op.setOrder(order);
+                op.setType(1);
+                Operations.set(Operations.indexOf(opOriginal),op);
+                msg.setContent("");
+                msg.addReceiver(op.getRequest().getReceiver());
+                send(msg);
+            }
+
             //ativate Landing operation
         }
 

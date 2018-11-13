@@ -12,7 +12,7 @@ public class Controller {
    
     private static MainContainer mainContainer; 
     private static List<ContainerController> ContainerControllers; 
-    private static int num_airports=10,num_airplanes=3;
+    private static int num_airports=4,num_airplanes=4;
 
     public static void main(String[] args) 
     {
@@ -56,7 +56,7 @@ public class Controller {
             
             //Arguments to be passed
             int airport_number = ContainerControllers.indexOf(container);
-            Object[] arguments = new Object[1];
+            Object[] arguments = new Object[2];
             arguments[0] = airport_number;
             arguments[1] = num_airports;
             
@@ -65,13 +65,6 @@ public class Controller {
             for(int i = 0; i < num_airplanes; i++)
                 mainContainer.startAgentInPlatform(container,"Airplane_"+((num_airplanes*airport_number)+i), "Agents.Airplane",arguments);
             
-            // Let all Airplanes be ready
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
             //Creates a agent with airport role per subcontainer.
             mainContainer.startAgentInPlatform(container,"Airport_"+airport_number, "Agents.Airport",arguments);
         }

@@ -100,7 +100,6 @@ public class Airplane extends Agent {
             if (msg != null) {
                 if (msg.getPerformative() == ACLMessage.CFP) {
                     String[] locationString = msg.getContent().split(",");
-                    System.out.println("location received"+msg.getContent());
                     location[0] = Integer.parseInt(locationString[0]);
                     location[1] = Integer.parseInt(locationString[1]);               
                 }

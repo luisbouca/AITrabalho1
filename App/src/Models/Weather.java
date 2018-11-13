@@ -9,8 +9,8 @@ public class Weather extends Request{
     private int precipitacion;
     private int[] location = new int[2];//Latitude|Longitude
 
-    public Weather(int temperature, int wind, int humidity, int precipitacion, String identification, AID sender, AID receiver, Flight flight) {
-        super(identification, sender, receiver, flight,0);
+    public Weather(int temperature, int wind, int humidity, int precipitacion, String identification, AID sender, AID receiver) {
+        super(identification, sender, receiver,0);
         this.temperature = temperature;
         this.wind = wind;
         this.humidity = humidity;
