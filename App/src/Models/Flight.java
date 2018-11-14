@@ -35,7 +35,7 @@ public class Flight {
     }
 
     public String getMsg() {
-        return identification + "," + airplane + "," + passagers + "," + destination + "," + departure + "," + duration + "," + date + "," + speed + "," + airport + "," + fuel + "," + state + "," + distance ;
+        return identification + "," + airplane + "," + passagers + "," + destination[0] + ","  + destination[1] + "," + departure + "," + duration + "," + date + "," + speed + "," + airport + "," + fuel + "," + state + "," + distance ;
     }
 
     public String getIdentification() {

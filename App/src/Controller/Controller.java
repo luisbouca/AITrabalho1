@@ -40,6 +40,7 @@ public class Controller {
         ContainerControllers = new ArrayList<>();
 
             //Creats a random number of subcontainers.
+            mainContainer.initContainerInPlatform("localhost", "9888", "Air");
             for(int i = 0; i <num_airports; i++)
                 ContainerControllers.add(mainContainer.initContainerInPlatform("localhost", "9888", "Container"+i));
 
