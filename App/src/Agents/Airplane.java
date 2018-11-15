@@ -2,6 +2,7 @@ package Agents;
 
 import Models.Flight;
 import jade.core.Agent;
+import jade.core.ContainerID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -102,7 +103,18 @@ public class Airplane extends Agent {
                     String[] locationString = msg.getContent().split(",");
                     location[0] = Integer.parseInt(locationString[0]);
                     location[1] = Integer.parseInt(locationString[1]);               
+                }else if(msg.getPerformative() == ACLMessage.INFORM){
+                    flight = new Flight(msg.getContent());
+                    System.out.println("Informação do voo: "+flight.getDestination()[0]+","+flight.getDestination()[1]);
+                }else if(msg.getPerformative() == ACLMessage.CONFIRM){
+                    System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+flight.getDestination()[0]+", "+flight.getDestination()[1]); 
+                    ContainerID destination = new ContainerID();
+                    destination.setName("Air");
+                    System.out.println(getLocalName()+" -> Moving to Container " + destination.getName());
+                    doMove(destination);
                 }
+            }else{
+                block();
             }
         }
     }

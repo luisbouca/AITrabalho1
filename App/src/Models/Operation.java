@@ -7,6 +7,7 @@ public class Operation {
     private Date date;
     private int type;
     private Order order;
+    private int trackId; 
 
 
     public Operation(Request req,int type) {
@@ -26,6 +27,14 @@ public class Operation {
 
     public Order getOrder() {
         return order;
+    }
+
+    public int getTackId(){
+        return trackId;
+    }
+
+    public void setTackId(int trackId){
+        this.trackId = trackId;
     }
 
     public int getType() {
