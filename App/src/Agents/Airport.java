@@ -20,6 +20,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONObject;
 
 public class Airport extends Agent {
 
@@ -322,6 +323,7 @@ public class Airport extends Agent {
                 }
             }
             
+            // <editor-fold defaultstate="collapsed" desc="Setting TakeOffs and Landings to flights">
             //Iterate over all tracks, looking free track.
             for(Track track:allocated_tracks)
             {
@@ -343,31 +345,77 @@ public class Airport extends Agent {
                         }
                     }
                     
+                    //json object, that will send information to agent.
+                    JSONObject packet = new JSONObject(); 
                     //Checks if the track is allocated for takeoffs or landings.
                     if(track.getType() == 0)
                     {
                         //ativate Takeoff operation
                         if(!takeoff.isEmpty()){
                             Operation opOriginal = takeoff.get(new Random().nextInt(takeoff.size()));
-                            Operation op = opOriginal;
-                            ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-                            Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
-                            op.setOrder(order);
-                            op.setType(1);
+                                Operation op = opOriginal;
+                                
+                                    Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
+                                        order.setType(Order.Type.TakeOff);
+                                
+                                op.setOrder(order);
+                                op.setType(1);
                             Operations.set(Operations.indexOf(opOriginal),op);
-                            msg.setContent("");
-                            msg.addReceiver(op.getRequest().getReceiver());
-                            send(msg);
                             
+                            try
+                            {
+                                //Changing track state to occupied.
+                                track.setState(1);
+                                //Creating a packet that will be sendend to an agent.
+                                packet.put(order.getType().toString(), track.getId());
+                                
+                                ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+                                    msg.setContent(packet.toString());
+                                    msg.addReceiver(op.getRequest().getReceiver());
+                                send(msg);
+                            }
+                            catch(Exception ex)
+                            {
+                                 System.console().printf("Exception: "+ex.getMessage());
+                            }
                         }
                     }
                     else
                     {
-                       //ativate Landing operation
+                        if(!landing.isEmpty()){
+                            //ativate Landing operation
+                            Operation opOriginal = landing.get(new Random().nextInt(landing.size()));
+                                Operation op = opOriginal;
+
+                                    Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
+                                        order.setType(Order.Type.Landing);
+
+                                op.setOrder(order);
+                                op.setType(1);
+                            Operations.set(Operations.indexOf(opOriginal),op);
+
+                            try
+                            {
+                                //Changing track state to occupied.
+                                track.setState(1);
+                                //Creating a packet that will be sendend to an agent.
+                                packet.put(order.getType().toString(), track.getId());
+                                
+                                ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+                                    msg.setContent(packet.toString());
+                                    msg.addReceiver(op.getRequest().getReceiver());
+                                send(msg);
+                            }
+                            catch(Exception ex)
+                            {
+                                System.console().printf("Exception: "+ex.getMessage());
+                            }
+                        }
                     }
                         
                 }
             }
+            // </editor-fold>
         }
 
     }

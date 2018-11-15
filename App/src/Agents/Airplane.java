@@ -107,6 +107,9 @@ public class Airplane extends Agent {
                     flight = new Flight(msg.getContent());
                     System.out.println("Informação do voo: "+flight.getDestination()[0]+","+flight.getDestination()[1]);
                 }else if(msg.getPerformative() == ACLMessage.CONFIRM){
+                    
+                    
+                    
                     System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+flight.getDestination()[0]+", "+flight.getDestination()[1]); 
                     ContainerID destination = new ContainerID();
                     destination.setName("Air");
