@@ -21,7 +21,6 @@ public class Airplane extends Agent {
     private int max_fuel;
     private int safety_area;
     private int[] location = new int[2];//Latitude|Longitude
-    private int[] dest = new int[2];
 
     public String getMake() {
         return make;
@@ -105,17 +104,17 @@ public class Airplane extends Agent {
                     location[0] = Integer.parseInt(locationString[0]);
                     location[1] = Integer.parseInt(locationString[1]);               
                 }else if(msg.getPerformative() == ACLMessage.INFORM){
-                    String[] locationString = msg.getContent().split(",");
-                    dest[0] = Integer.parseInt(locationString[3]);
-                    dest[1] = Integer.parseInt(locationString[4]);
-                    System.out.println("Informação do voo: "+dest[0]+","+dest[1]);
+                    flight = new Flight(msg.getContent());
+                    System.out.println("Informação do voo: "+flight.getDestination()[0]+","+flight.getDestination()[1]);
                 }else if(msg.getPerformative() == ACLMessage.CONFIRM){
-                    System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+dest[0]+", "+dest[1]); 
-			ContainerID destination = new ContainerID();
-			destination.setName("Air");
-			System.out.println(getLocalName()+" -> Moving to Container " + destination.getName());
-			doMove(destination);
+                    System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+flight.getDestination()[0]+", "+flight.getDestination()[1]); 
+                    ContainerID destination = new ContainerID();
+                    destination.setName("Air");
+                    System.out.println(getLocalName()+" -> Moving to Container " + destination.getName());
+                    doMove(destination);
                 }
+            }else{
+                block();
             }
         }
     }

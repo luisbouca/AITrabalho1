@@ -99,7 +99,7 @@ public class Airport extends Agent {
         //receiver behaviour that will handle every message received
         this.addBehaviour(new Receiver());
         //ticker behaviour, will handle the queue and flight assignment
-        this.addBehaviour(new CheckOperations(this, 15000));
+        this.addBehaviour(new CheckOperations(this, 10000));
         
         super.setup();
     }

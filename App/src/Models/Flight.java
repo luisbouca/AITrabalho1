@@ -1,10 +1,11 @@
 package Models;
 
 import jade.core.AID;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Random;
 
-public class Flight {
+public class Flight implements Serializable{
     private String identification;
     private AID airplane;
     private int passagers;
@@ -16,9 +17,23 @@ public class Flight {
     private AID airport;
     private int fuel;
     private int state;
-    private float distance;
+    private int distance;
     //private List<> interations; missing interactions Class
-
+    public Flight(String message) {
+        String[] messageArray = message.split(";");
+        this.identification = messageArray[0];
+        this.airplane = new AID(messageArray[1]);
+        this.passagers = Integer.parseInt(messageArray[2]);
+        this.destination = new int[]{Integer.parseInt(messageArray[3]),Integer.parseInt(messageArray[4])};
+        this.departure = new int[]{Integer.parseInt(messageArray[5]),Integer.parseInt(messageArray[6])};
+        this.speed = Integer.parseInt(messageArray[7]);
+        this.airport = new AID(messageArray[8]);
+        this.fuel = Integer.parseInt(messageArray[9]);
+        state = Integer.parseInt(messageArray[10]);
+        date = new Date(messageArray[11]);
+        distance = Integer.parseInt(messageArray[12]);
+        duration = Integer.parseInt(messageArray[13]);
+    }
     public Flight(String idAirport, AID airplane, int passagers, int[] destination, int[] departure, int speed, AID airport, int fuel) {
         this.identification = idAirport+"Airport:"+ new Random().nextInt(100000);
         this.airplane = airplane;
@@ -35,7 +50,7 @@ public class Flight {
     }
 
     public String getMsg() {
-        return identification + "," + airplane + "," + passagers + "," + destination[0] + ","  + destination[1] + "," + departure + "," + duration + "," + date + "," + speed + "," + airport + "," + fuel + "," + state + "," + distance ;
+        return identification + ";" + airplane + ";" + passagers + ";" + destination[0] + ";"  + destination[1] + ";" + departure[0] + ";" + departure[1] + ";" + speed + ";" + airport + ";" + fuel + ";" + state + ";" + date + ";" + distance + ";" + duration ;
     }
 
     public String getIdentification() {
