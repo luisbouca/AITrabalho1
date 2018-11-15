@@ -10,6 +10,7 @@ public class Flight implements Serializable{
     private AID airplane;
     private int passagers;
     private int[] destination;
+    private int[] tmpdestination;
     private int[] departure;
     private int duration;
     private Date date;
@@ -46,7 +47,7 @@ public class Flight implements Serializable{
         state = 0;
         date = new Date();
         distance = (int) Math.sqrt(((Math.pow((destination[0] - departure[0]), 2)) + (Math.pow((destination[1] - departure[1]), 2))));
-        duration = (int) (distance/speed);
+        duration = (int) ((distance/speed)/2);
     }
 
     public String getMsg() {
@@ -61,13 +62,26 @@ public class Flight implements Serializable{
         return airplane;
     }
 
+    public void setState(int state) {
+        this.state = state;
+    }
+    
     public int getPassagers() {
         return passagers;
     }
 
     public int[] getDestination() {
-        return destination;
+        if(tmpdestination != null){
+            return tmpdestination;
+        }else{
+            return destination;
+        }
     }
+
+    public void setTmpdestination(int[] tmpdestination) {
+        this.tmpdestination = tmpdestination;
+    }
+    
 
     public int[] getDeparture() {
         return departure;

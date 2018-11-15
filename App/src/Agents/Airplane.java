@@ -4,6 +4,7 @@ import Models.Flight;
 import jade.core.Agent;
 import jade.core.ContainerID;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -91,6 +92,7 @@ public class Airplane extends Agent {
             e.printStackTrace();
         }
         this.addBehaviour(new Receiver());
+        this.addBehaviour(new movePlane(this, 2000));
         super.setup();
     }
     //behabiour in charge of handling messages that the airplane receives
@@ -108,6 +110,7 @@ public class Airplane extends Agent {
                     System.out.println("Informação do voo: "+flight.getDestination()[0]+","+flight.getDestination()[1]);
                 }else if(msg.getPerformative() == ACLMessage.CONFIRM){
                     System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+flight.getDestination()[0]+", "+flight.getDestination()[1]); 
+                    flight.setState(1);
                     ContainerID destination = new ContainerID();
                     destination.setName("Air");
                     System.out.println(getLocalName()+" -> Moving to Container " + destination.getName());
@@ -117,5 +120,30 @@ public class Airplane extends Agent {
                 block();
             }
         }
+    }
+    
+    private class movePlane extends TickerBehaviour{
+
+        public movePlane(Agent a, long period) {
+            super(a, period);
+        }
+
+        @Override
+        protected void onTick() {
+            if(flight != null){
+                if(flight.getState()==1){
+                    location = getOptimalNextLocation();
+                    //send message to every plane in the air to inform them of my location
+                }
+            }
+            
+        }
+
+        private int[] getOptimalNextLocation() {
+            
+            // chose next location of the plane
+            return new int[2];
+        }
+        
     }
 }
