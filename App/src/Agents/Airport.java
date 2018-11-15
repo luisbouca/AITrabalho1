@@ -321,36 +321,53 @@ public class Airport extends Agent {
                     i = lista.size();
                 }
             }
-
-            //sort operations into 2 lists
-            List<Operation> takeoff = new ArrayList<>();
-            List<Operation> landing = new ArrayList<>();
-            for(int i = 0; i<Operations.size();i++){
-                if(Operations.get(i).getRequest().getType()== 0){
-                    if(Operations.get(i).getType()==0){
-                        takeoff.add(Operations.get(i));
+            
+            //Iterate over all tracks, looking free track.
+            for(Track track:allocated_tracks)
+            {
+                //If we get a track that is available.
+                if(track.getState() == 0)
+                {
+                    //sort operations into 2 lists
+                    List<Operation> takeoff = new ArrayList<>();
+                    List<Operation> landing = new ArrayList<>();
+                    for(int i = 0; i<Operations.size();i++){
+                        if(Operations.get(i).getRequest().getType()== 0){
+                            if(Operations.get(i).getType()==0){
+                                takeoff.add(Operations.get(i));
+                            }
+                        }else{
+                            if(Operations.get(i).getType()==0){
+                                landing.add(Operations.get(i));
+                            }
+                        }
                     }
-                }else{
-                    if(Operations.get(i).getType()==0){
-                        landing.add(Operations.get(i));
+                    
+                    //Checks if the track is allocated for takeoffs or landings.
+                    if(track.getType() == 0)
+                    {
+                        //ativate Takeoff operation
+                        if(!takeoff.isEmpty()){
+                            Operation opOriginal = takeoff.get(new Random().nextInt(takeoff.size()));
+                            Operation op = opOriginal;
+                            ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+                            Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
+                            op.setOrder(order);
+                            op.setType(1);
+                            Operations.set(Operations.indexOf(opOriginal),op);
+                            msg.setContent("");
+                            msg.addReceiver(op.getRequest().getReceiver());
+                            send(msg);
+                            
+                        }
                     }
+                    else
+                    {
+                       //ativate Landing operation
+                    }
+                        
                 }
             }
-            //ativate Takeoff operation
-            if(!takeoff.isEmpty()){
-                Operation opOriginal = takeoff.get(new Random().nextInt(takeoff.size()));
-                Operation op = opOriginal;
-                ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-                Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
-                op.setOrder(order);
-                op.setType(1);
-                Operations.set(Operations.indexOf(opOriginal),op);
-                msg.setContent("");
-                msg.addReceiver(op.getRequest().getReceiver());
-                send(msg);
-            }
-
-            //ativate Landing operation
         }
 
     }
