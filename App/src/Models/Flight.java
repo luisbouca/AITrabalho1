@@ -18,6 +18,19 @@ public class Flight implements Serializable{
     private int fuel;
     private int state;
     private int distance;
+    private String takeOffTrack;
+    private String landingTrack;
+    
+    public enum Confirmation {
+        TakeOff,
+        Landing,
+        Speed,
+        Direction,
+        State,
+        Destinatio;
+    }
+    
+    
     //private List<> interations; missing interactions Class
     public Flight(String message) {
         String[] messageArray = message.split(";");
@@ -93,6 +106,9 @@ public class Flight implements Serializable{
         return fuel;
     }
 
+    public void setState(int state) {
+        this.state = state;
+    }
     public int getState() {
         return state;
     }
@@ -101,5 +117,27 @@ public class Flight implements Serializable{
         return distance;
     }
     
+    
+    //Defining tracks, which will be used during takeoff and landing.
+    public void setTakeOffTrack(String takeOffTrack)
+    {
+        this.takeOffTrack = this.takeOffTrack;
+    }
+    
+    public String getTakeOffTrack()
+    {
+        return this.takeOffTrack;
+    }
+    
+    
+    public void setLandingTrack(String landingTrack)
+    {
+        this.landingTrack = this.landingTrack;
+    }
+    
+    public String getLandingTrack()
+    {
+        return this.landingTrack;
+    }
     
 }

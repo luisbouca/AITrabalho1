@@ -1,6 +1,8 @@
 package Agents;
 
 import Models.Flight;
+import Models.Order;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.ContainerID;
 import jade.core.behaviours.CyclicBehaviour;
@@ -10,6 +12,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import java.util.Random;
+import org.json.JSONObject;
 
 public class Airplane extends Agent {
 
@@ -108,17 +111,57 @@ public class Airplane extends Agent {
                     System.out.println("Informação do voo: "+flight.getDestination()[0]+","+flight.getDestination()[1]);
                 }else if(msg.getPerformative() == ACLMessage.CONFIRM){
                     
-                    
-                    
-                    System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+flight.getDestination()[0]+", "+flight.getDestination()[1]); 
-                    ContainerID destination = new ContainerID();
-                    destination.setName("Air");
-                    System.out.println(getLocalName()+" -> Moving to Container " + destination.getName());
-                    doMove(destination);
+                    try
+                    {
+                        //Getting communication data packet.
+                        JSONObject receivedPacket = new JSONObject(msg.getContent());
+                     
+                        //Checks if it is a takeoff order 
+                        if(receivedPacket.has(Order.Type.TakeOff.toString()))
+                        {
+                            //Setting track to flight
+                            flight.setTakeOffTrack(receivedPacket.getString(Order.Type.TakeOff.toString()));
+                            flight.setState(1); //Changing flight status.
+                            
+                            //Sending a confirmation message to airport.
+                            sendConfirmation(msg.getSender(), new JSONObject().put(Flight.Confirmation.TakeOff.toString(), receivedPacket.getString(Order.Type.TakeOff.toString())).toString());
+                        }
+                        else if(receivedPacket.has(Order.Type.Landing.toString())) //Checks if it is a landing order.
+                        {
+                            //Setting landing track to fligh.
+                            flight.setLandingTrack(receivedPacket.getString(Order.Type.Landing.toString())); 
+                            flight.setState(3); //Changing flight status.
+                            
+                            //Sending a confirmation message to airport.
+                            sendConfirmation(msg.getSender(), new JSONObject().put(Flight.Confirmation.Landing.toString(), receivedPacket.getString(Order.Type.Landing.toString())).toString());
+                        }
+                        else
+                        {
+                            System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+flight.getDestination()[0]+", "+flight.getDestination()[1]); 
+                            ContainerID destination = new ContainerID();
+                            destination.setName("Air");
+                            System.out.println(getLocalName()+" -> Moving to Container " + destination.getName());
+                            doMove(destination);
+                        }  
+                    }    
+                    catch(Exception ex)
+                    {
+                         System.console().printf("Exception: "+ex.getMessage());
+                    }
                 }
             }else{
                 block();
             }
         }
+        
+        //Sending an confirmation message.
+        private void sendConfirmation(AID receiver, String packet)
+        {
+            ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
+                msg.setContent(packet);
+                msg.addReceiver(receiver);
+            send(msg);
+        }
+        
     }
 }

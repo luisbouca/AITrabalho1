@@ -20,6 +20,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.json.JSONObject;
 
 public class Airport extends Agent {
@@ -235,8 +236,57 @@ public class Airport extends Agent {
                         System.out.println("Airport"+arg1+" assigned Airport"+flight.getAirport().getLocalName()+" to airplane"+tmp+"::"+flight.getAirplane().getLocalName());
                     }
                 }else if (msg.getPerformative() == ACLMessage.CONFIRM) {
-                    reserved_Spaces.add(new AID(msg.getContent()));
-                    System.out.println(getLocalName()+" reserved 1 space");
+                    
+                    try
+                    {
+                        //Getting communication data packet.
+                        JSONObject receivedPacket = new JSONObject(msg.getContent());
+                        
+                        //Checks confirmation message type.
+                        if(receivedPacket.has(Flight.Confirmation.TakeOff.toString()))
+                        {
+                            //Gets track id that was allocated to a flight
+                            String track_id = receivedPacket.getString(Flight.Confirmation.TakeOff.toString());
+                            
+                            //Trying to get track object.
+                            Track track = allocated_tracks.stream().filter(x -> x.getId().equals(track_id)).findAny().orElse(null);
+                            
+                            //If object exits.
+                            if(track != null)
+                            {
+                                //Updates his state.
+                                int index = allocated_tracks.indexOf(track);
+                                track.setState(0);
+                                allocated_tracks.set(allocated_tracks.indexOf(track), track);
+                            }
+                        }
+                        else if(receivedPacket.has(Flight.Confirmation.Landing.toString()))
+                        {
+                            //Gets track id that was allocated to a flight
+                            String track_id = receivedPacket.getString(Flight.Confirmation.Landing.toString());
+                            
+                             //Trying to get track object.
+                            Track track = allocated_tracks.stream().filter(x -> x.getId().equals(track_id)).findAny().orElse(null);
+                            
+                             //If object exits.
+                            if(track != null)
+                            {
+                                //Updates his state.
+                                int index = allocated_tracks.indexOf(track);
+                                track.setState(0);
+                                allocated_tracks.set(allocated_tracks.indexOf(track), track);
+                            }
+                        }
+                        else
+                        {
+                            reserved_Spaces.add(new AID(msg.getContent()));
+                            System.out.println(getLocalName()+" reserved 1 space");
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        System.console().printf("Exception: "+ex.getMessage()); 
+                    }
                 }
             }else{
                 block();
