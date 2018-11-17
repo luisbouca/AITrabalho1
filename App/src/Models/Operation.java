@@ -3,18 +3,17 @@ package Models;
 import java.util.Date;
 
 public class Operation {
+    
     private Request req;
     private Date date;
     private int type;
     private Order order;
     private int trackId; 
-
-
+    
     public Operation(Request req,int type) {
         date = new Date();
         this.req = req;
         this.type = type;
-        this.order = order;
     }
 
     public void setOrder(Order order) {

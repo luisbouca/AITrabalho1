@@ -20,6 +20,11 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class Airport extends Agent {
 
@@ -162,7 +167,7 @@ public class Airport extends Agent {
     private class Receiver extends CyclicBehaviour {
 
         private int numAeroportosProcessados = 0;
-        List<List<Integer>> what = new ArrayList<List<Integer>>();
+        List<String> what = new ArrayList<>();
         List<AID> airports = new ArrayList<>();
         Random rand = new Random();
 
@@ -173,72 +178,105 @@ public class Airport extends Agent {
         public void action() {
             ACLMessage msg = receive();
             if (msg != null) {
-                if (msg.getPerformative() == ACLMessage.CFP) {
-                        ACLMessage resp = msg.createReply();
-                        resp.setPerformative(jade.lang.acl.ACLMessage.INFORM_IF);
-                        if ((allocated_Airplanes.size()+reserved_Spaces.size()) <= max_airplanes) {
+                try{
+                    //Getting communication data packet.
+                    JSONObject receivedPacket = new JSONObject(msg.getContent());
 
-                            System.out.println("Sou o aeroporto: " + getLocalName() + "e recebi pedido do: " + msg.getSender().getLocalName());
-                            resp.setContent(location[0] + "," + location[1] + "," + msg.getContent());
-                        } else {
-                            resp.setContent("no");
-                        }
-                        send(resp);
-                } else if (msg.getPerformative() == ACLMessage.INFORM_IF) {
-                    numAeroportosProcessados++;
-                    System.out.println(getLocalName()+": inquire received"+(numAeroportosProcessados) +","+(arg2-1));
-                    if (!msg.getContent().equals("no")) {
-                        String[] info = msg.getContent().split(",");
-                        List<Integer> sub = new ArrayList<>();
-                        sub.add(Integer.parseInt(info[0]));
-                        sub.add(Integer.parseInt(info[1]));
-                        sub.add(Integer.parseInt(info[2]));
-                        airports.add(msg.getSender());
-                        what.add(sub);
-                    }                    
-                    if (numAeroportosProcessados >= arg2-1) {
-                        int[] destino = new int[2];
-                        int[] origem = {location[0], location[1]};
-                        int tmp,rando;
-                        rando = rand.nextInt(what.size());
-                        List<Integer> please = what.get(rando);
-                        tmp = please.get(0);
-                        destino[0] = tmp;
-                        tmp = please.get(1);
-                        destino[1] = tmp;
-                        tmp = please.get(2);
-                        int passengers = rand.nextInt((100 - 50 + 1) + 50);
-                        Flight flight = new Flight(String.valueOf(arg1), allocated_Airplanes.get(tmp), passengers, destino, origem, 100, airports.get(rando), 50);
-                        for(int i = 0; i<Operations.size();i++){
-                            Operation op = Operations.get(i);
-                            if(op.getRequest().getReceiver().equals(allocated_Airplanes.get(tmp))&& op.getRequest().getSender().equals(getAID())){
-                                Operations.get(i).setType(0);
-                                Operations.get(i).setFlight(flight);
-                                break;
+                    switch (msg.getPerformative()) {
+                        case ACLMessage.CFP: 
+                            JSONObject packet = new JSONObject();
+                            if ((allocated_Airplanes.size()+reserved_Spaces.size()) <= max_airplanes) {
+
+                                System.out.println("Sou o aeroporto: " + getLocalName() + "e recebi pedido do: " + msg.getSender().getLocalName());
+                                packet.put("state",1);
+                                packet.put("lat",location[0]);
+                                packet.put("lon",location[1]);
+                                packet.put("Airplane",receivedPacket.getInt("Airplane"));
+                            } else {
+                                packet.put("state",0);
                             }
-                        }
-                        //To airport destination
-                        ACLMessage msg1 = new ACLMessage();
-                        msg1.setPerformative(ACLMessage.CONFIRM);
-                        msg1.setContent(""+flight.getAirplane());
-                        msg1.addReceiver(airports.get(rando));
-                        send(msg1);
-                        //to airplane
-                        ACLMessage msg2 = new ACLMessage();
-                        msg2.setPerformative(ACLMessage.INFORM);
-                        msg2.setContent(flight.getMsg());
-                        msg2.addReceiver(allocated_Airplanes.get(tmp));
-                        send(msg2);
-                        numAeroportosProcessados = 0;
-                        what.removeAll(what);
-                        System.out.println("Airport"+arg1+" assigned Airport"+flight.getAirport().getLocalName()+" to airplane"+tmp+"::"+flight.getAirplane().getLocalName());
+                            sendMessage(ACLMessage.INFORM_IF,new AID[]{msg.getSender()},packet.toString());
+                            break;
+                        case ACLMessage.INFORM_IF:
+                            if(receivedPacket.has("state") && receivedPacket.has("lat") && receivedPacket.has("lon") &&receivedPacket.has("Airplane")){
+                                numAeroportosProcessados++;
+                                System.out.println(getLocalName()+": inquire received"+(numAeroportosProcessados) +","+(arg2-1));
+                                if (receivedPacket.getInt("state") == 1) {
+                                    receivedPacket.put("Airport",msg.getSender().toString());
+                                    what.add(receivedPacket.toString());
+                                    airports.add(msg.getSender());
+                                }
+                                if (numAeroportosProcessados >= arg2-1) {
+                                    int[] destino = new int[2];
+                                    int[] origem = new int[]{location[0], location[1]};
+                                    int index = rand.nextInt(what.size());
+                                    JSONObject please = new JSONObject(what.get(index));
+                                    destino[0] = please.getInt("lat");
+                                    destino[1] = please.getInt("lon");
+                                    int passengers = rand.nextInt((100 - 50 + 1) + 50);
+                                    Flight flight = new Flight(String.valueOf(arg1), allocated_Airplanes.get(please.getInt("Airplane")), passengers, destino, origem, 100, airports.get(index), 50);
+                                    for(int i = 0; i<Operations.size();i++){
+                                        Operation op = Operations.get(i);
+                                        if(op.getRequest().getReceiver().equals(allocated_Airplanes.get(please.getInt("Airplane")))&& op.getRequest().getSender().equals(getAID())){
+                                            Operations.get(i).setType(0);
+                                            Operations.get(i).setFlight(flight);
+                                            i = Operations.size();
+                                        }
+                                    }
+                                    //To airport destination
+                                    JSONObject packet1 = new JSONObject();
+                                    packet1.put("Airplane",flight.getAirplane().toString());
+                                    sendMessage(ACLMessage.CONFIRM,new AID[]{airports.get(index)},packet1.toString());
+                                    //to airplane
+                                    JSONObject packet2 = new JSONObject();
+                                    packet2.put("Flight",flight.getMsg());
+                                    sendMessage(ACLMessage.INFORM,new AID[]{allocated_Airplanes.get(please.getInt("Airplane"))},packet2.toString());
+                                    numAeroportosProcessados = 0;
+                                    what.removeAll(what);
+                                }
+                            }   
+                            break;
+                        case ACLMessage.CONFIRM:
+                            //Checks confirmation message type.
+                            if(receivedPacket.has(Flight.Confirmation.TakeOff.toString())){
+                                //Gets track id that was allocated to a flight
+                                String track_id = receivedPacket.getString(Flight.Confirmation.TakeOff.toString());
+                                
+                                //Trying to get track object.
+                                Track track = allocated_tracks.stream().filter(x -> x.getId().equals(track_id)).findAny().orElse(null);
+                                
+                                //If object exits.
+                                if(track != null){
+                                    //Updates his state.
+                                    int index = allocated_tracks.indexOf(track);
+                                    track.setState(0);
+                                    allocated_tracks.set(index, track);
+                                }
+                            }else if(receivedPacket.has(Flight.Confirmation.Landing.toString())){
+                                //Gets track id that was allocated to a flight
+                                String track_id = receivedPacket.getString(Flight.Confirmation.Landing.toString());
+                                
+                                //Trying to get track object.
+                                Track track = allocated_tracks.stream().filter(x -> x.getId().equals(track_id)).findAny().orElse(null);
+                                
+                                //If object exits.
+                                if(track != null){
+                                    //Updates his state.
+                                    int index = allocated_tracks.indexOf(track);
+                                    track.setState(0);
+                                    allocated_tracks.set(index, track);
+                                }
+                            }else if(receivedPacket.has("Airplane")){
+                                reserved_Spaces.add(new AID(receivedPacket.getString("Airplane")));
+                                System.out.println(getLocalName()+" reserved 1 space");
+                            }   
+                            break;
+                        default:
+                            break;
                     }
-                }else if (msg.getPerformative() == ACLMessage.CONFIRM) {
-                    reserved_Spaces.add(new AID(msg.getContent()));
-                    System.out.println(getLocalName()+" reserved 1 space");
+                }catch(Exception ex){
+                    System.console().printf("Exception: "+ex.getMessage()); 
                 }
-            }else{
-                block();
             }
 
         }
@@ -257,11 +295,25 @@ public class Airport extends Agent {
         @Override
         public void action() {
             //sends the message with the location to the designated airplane
-            ACLMessage message = new ACLMessage(ACLMessage.CFP);//TODO change this maybe
-            message.addReceiver(airplane);
-            message.setContent(location[0] + "," + location[1]);
-            myAgent.send(message);
+            try {
+                JSONObject packet = new JSONObject(); 
+                packet.put("lat",location[0]);
+                packet.put("lon",location[1]);
+                sendMessage(ACLMessage.CFP,new AID[]{airplane},packet.toString());
+            } catch (JSONException ex) {
+                Logger.getLogger(Airport.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+    }
+    //Sending an confirmation message.
+    private void sendMessage(int performative,AID[] receivers, String packet)
+    {
+        ACLMessage msg = new ACLMessage(performative);
+        msg.setContent(packet);
+        for(AID receiver :receivers){
+            msg.addReceiver(receiver);
+        }
+        send(msg);
     }
 
     private class CheckOperations extends TickerBehaviour {
@@ -289,68 +341,121 @@ public class Airport extends Agent {
 
             for (int i = 0; i < lista.size(); i++) {
                 if (lista.get(i) == 0) {
-                    ACLMessage message = new ACLMessage(ACLMessage.CFP);//TODO change this maybe
-                    //message.addReceiver(airplane);
-                    message.setContent(String.valueOf(i));
-                    Request req = new Request(arg1+"REQ"+new Random().nextInt(1000000),getAID(),allocated_Airplanes.get(i),0);
-                    Operation op = new Operation(req,-1);
-                    Operations.add(op);
-                    for (int j = 0; j < arg2; j++) {
-                        if (j != arg1) {
-                            DFAgentDescription template = new DFAgentDescription();
-                            ServiceDescription sd = new ServiceDescription();
-                            sd.setType("Aiports" + j);
-                            template.addServices(sd);
+                    try {
+                        JSONObject packet = new JSONObject(); 
+                        packet.put("Airplane",String.valueOf(i));
+                        
+                        Request req = new Request(arg1+"REQ"+new Random().nextInt(1000000),getAID(),allocated_Airplanes.get(i),0);
+                        Operation op = new Operation(req,-1);
+                        Operations.add(op);
+                        AID[] airports = new AID[arg2-1];
+                        int tmp = 0;
+                        for (int j = 0; j < arg2; j++) {
+                            if (j != arg1) {
+                                DFAgentDescription template = new DFAgentDescription();
+                                ServiceDescription sd = new ServiceDescription();
+                                sd.setType("Aiports" + j);
+                                template.addServices(sd);
 
-                            DFAgentDescription[] result;
-                            
-                            try {
+                                DFAgentDescription[] result;
                                 result = DFService.search(myAgent, template);
-                                AID airports;
                                 if (result.length != 0) {
-                                    airports = result[0].getName();
-                                    message.addReceiver(airports);
+                                    airports[tmp] = result[0].getName();
                                 }
-
-                            } catch (FIPAException e) {
-                                e.printStackTrace();
+                                tmp++;
+                            }
+                        }
+                        sendMessage(ACLMessage.CFP,airports,packet.toString());
+                        i = lista.size();
+                    } catch (Exception e) {
+                        Logger.getLogger(Airport.class.getName()).log(Level.SEVERE, null, e);
+                    }
+                }
+            }
+            
+            //Iterate over all tracks, looking free track.
+            for(Track track:allocated_tracks)
+            {
+                //If we get a track that is available.
+                if(track.getState() == 0)
+                {
+                    //sort operations into 2 lists
+                    List<Operation> takeoff = new ArrayList<>();
+                    List<Operation> landing = new ArrayList<>();
+                    for(int i = 0; i<Operations.size();i++){
+                        if(Operations.get(i).getRequest().getType()== 0){
+                            if(Operations.get(i).getType()==0){
+                                takeoff.add(Operations.get(i));
+                            }
+                        }else{
+                            if(Operations.get(i).getType()==0){
+                                landing.add(Operations.get(i));
                             }
                         }
                     }
-                    myAgent.send(message);
-                    i = lista.size();
+                    
+                    //json object, that will send information to agent.
+                    JSONObject packet = new JSONObject(); 
+                    //Checks if the track is allocated for takeoffs or landings.
+                    if(track.getType() == 0)
+                    {
+                        //ativate Takeoff operation
+                        if(!takeoff.isEmpty()){
+                            Operation opOriginal = takeoff.get(new Random().nextInt(takeoff.size()));
+                                Operation op = opOriginal;
+                                
+                                    Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
+                                        order.setType(Order.Type.TakeOff);
+                                
+                                op.setOrder(order);
+                                op.setType(1);
+                            Operations.set(Operations.indexOf(opOriginal),op);
+                            
+                            try
+                            {
+                                //Changing track state to occupied.
+                                track.setState(1);
+                                //Creating a packet that will be sendend to an agent.
+                                packet.put(order.getType().toString(), track.getId());
+                                sendMessage(ACLMessage.CONFIRM,new AID[]{op.getRequest().getReceiver()},packet.toString());
+                            }
+                            catch(Exception ex)
+                            {
+                                 System.console().printf("Exception: "+ex.getMessage());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if(!landing.isEmpty()){
+                            //ativate Landing operation
+                            Operation opOriginal = landing.get(new Random().nextInt(landing.size()));
+                                Operation op = opOriginal;
+
+                                    Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
+                                        order.setType(Order.Type.Landing);
+
+                                op.setOrder(order);
+                                op.setType(1);
+                            Operations.set(Operations.indexOf(opOriginal),op);
+
+                            try
+                            {
+                                //Changing track state to occupied.
+                                track.setState(1);
+                                //Creating a packet that will be sendend to an agent.
+                                packet.put(order.getType().toString(), track.getId());
+                                sendMessage(ACLMessage.CONFIRM,new AID[]{op.getRequest().getReceiver()},packet.toString());
+                            }
+                            catch(Exception ex)
+                            {
+                                System.console().printf("Exception: "+ex.getMessage());
+                            }
+                        }
+                    }
+                        
                 }
             }
-
-            //sort operations into 2 lists
-            List<Operation> takeoff = new ArrayList<>();
-            List<Operation> landing = new ArrayList<>();
-            for(int i = 0; i<Operations.size();i++){
-                if(Operations.get(i).getRequest().getType()== 0){
-                    if(Operations.get(i).getType()==0){
-                        takeoff.add(Operations.get(i));
-                    }
-                }else{
-                    if(Operations.get(i).getType()==0){
-                        landing.add(Operations.get(i));
-                    }
-                }
-            }
-            //ativate Takeoff operation
-            if(!takeoff.isEmpty()){
-                Operation opOriginal = takeoff.get(new Random().nextInt(takeoff.size()));
-                Operation op = opOriginal;
-                ACLMessage msg = new ACLMessage(ACLMessage.CONFIRM);
-                Order order = new Order(STATE_READY, getAID(), op.getRequest().getReceiver(), op.getRequest().getFlight());
-                op.setOrder(order);
-                op.setType(1);
-                Operations.set(Operations.indexOf(opOriginal),op);
-                msg.setContent("");
-                msg.addReceiver(op.getRequest().getReceiver());
-                send(msg);
-            }
-
-            //ativate Landing operation
         }
 
     }
