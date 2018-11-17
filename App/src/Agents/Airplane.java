@@ -98,8 +98,10 @@ public class Airplane extends Agent {
         this.addBehaviour(new movePlane(this, 2000));
         super.setup();
     }
+
     //behabiour in charge of handling messages that the airplane receives
     private class Receiver extends CyclicBehaviour {
+
         @Override
         public void action() {
             ACLMessage msg = receive();
@@ -161,19 +163,19 @@ public class Airplane extends Agent {
                 }
             }
         }
-        
-        //Sending an confirmation message.
-        private void sendMessage(int performative,AID receiver, String packet)
-        {
-            ACLMessage msg = new ACLMessage(performative);
-            msg.setContent(packet);
-            msg.addReceiver(receiver);
-            send(msg);
-        }
-        
     }
-    
-    private class movePlane extends TickerBehaviour{
+
+    //Sending an message.
+    private void sendMessage(int performative,AID receiver, String packet)
+    {
+        ACLMessage msg = new ACLMessage(performative);
+        msg.setContent(packet);
+        msg.addReceiver(receiver);
+        send(msg);
+    }
+
+    private class movePlane extends TickerBehaviour {
+        double distanceTemp;
 
         public movePlane(Agent a, long period) {
             super(a, period);
@@ -181,20 +183,48 @@ public class Airplane extends Agent {
 
         @Override
         protected void onTick() {
-            if(flight != null){
-                if(flight.getState()==1){
-                    location = getOptimalNextLocation();
-                    //send message to every plane in the air to inform them of my location
+            if (flight != null) {
+                if (flight.getState() == 1) {
+                    distanceTemp=Math.sqrt(((Math.pow((flight.getDestination()[0] - location[0]), 2)) + (Math.pow((flight.getDestination()[1] - location[1]), 2))));
+                    if(distanceTemp<safety_area){
+                        //Faz pedido de atterragem
+                    }else{
+                        //Continua a movimentar-se
+                    
+                        
+                        
+                        
+                        
+                        location = getOptimalNextLocation(flight.getDestination(), location); 
+                        System.out.println("I am: "+getLocalName()+" My new location is: "+location[0]+", "+location[1]); 
+                    }
                 }
             }
-            
+
         }
 
-        private int[] getOptimalNextLocation() {
-            
+        private int[] getOptimalNextLocation(int[] destino, int[] localizacaoAtual) {
+            int x1, x2, y1, y2, width;
+            int[]localizacao = new int[2];
+            float test=0;
+            int speed = 2;
+            x1 = localizacaoAtual[0];
+            y1 = localizacaoAtual[1];
+            x2 = destino[0];
+            y2 = destino[1];
+            float ratio = (float)(y2 - y1) / (x2 - x1);
+            width = x2 - x1;
+            if(width<0){
+                localizacao[0] = x1 - speed;
+                localizacao[1] = (int) (y1 - (ratio * speed)); 
+            }else{
+                localizacao[0] = x1 + speed;
+                localizacao[1] = (int) (y1 + (ratio * speed)); 
+            }
+            localizacaoAtual[1]=(int) test;
             // chose next location of the plane
-            return new int[2];
+            return localizacao;
         }
-        
+
     }
 }
