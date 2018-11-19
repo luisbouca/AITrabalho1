@@ -104,7 +104,7 @@ public class Airport extends Agent {
         //receiver behaviour that will handle every message received
         this.addBehaviour(new Receiver());
         //ticker behaviour, will handle the queue and flight assignment
-        this.addBehaviour(new CheckOperations(this, 10000));
+        this.addBehaviour(new CheckOperations(this, 5000));
         
         super.setup();
     }
@@ -270,6 +270,13 @@ public class Airport extends Agent {
                                 reserved_Spaces.add(new AID(receivedPacket.getString("Airplane")));
                                 System.out.println(getLocalName()+" reserved 1 space");
                             }   
+                            break;
+                            
+                        case ACLMessage.PROPOSE:
+                            JSONObject pacote = new JSONObject();
+                            pacote.put("numAero", allocated_Airplanes.size());
+                            sendMessage(ACLMessage.INFORM,new AID[]{(msg.getSender())},pacote.toString());
+                            
                             break;
                         default:
                             break;
