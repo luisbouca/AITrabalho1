@@ -6,7 +6,7 @@ public class Operation {
     
     private Request req;
     private Date date;
-    private int type;
+    private int type;//-1 - not finished | 0 - waiting for permision | 1 - in process
     private Order order;
     private int trackId; 
     

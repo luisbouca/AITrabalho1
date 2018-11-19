@@ -36,12 +36,12 @@ public class Flight implements Serializable{
     public Flight(String message) {
         String[] messageArray = message.split(";");
         this.identification = messageArray[0];
-        this.airplane = new AID(messageArray[1]);
+        this.airplane = new AID(messageArray[1],false);
         this.passagers = Integer.parseInt(messageArray[2]);
         this.destination = new int[]{Integer.parseInt(messageArray[3]),Integer.parseInt(messageArray[4])};
         this.departure = new int[]{Integer.parseInt(messageArray[5]),Integer.parseInt(messageArray[6])};
         this.speed = Integer.parseInt(messageArray[7]);
-        this.airport = new AID(messageArray[8]);
+        this.airport = new AID(messageArray[8],false);
         this.fuel = Integer.parseInt(messageArray[9]);
         state = Integer.parseInt(messageArray[10]);
         date = new Date(messageArray[11]);
@@ -64,7 +64,7 @@ public class Flight implements Serializable{
     }
 
     public String getMsg() {
-        return identification + ";" + airplane + ";" + passagers + ";" + destination[0] + ";"  + destination[1] + ";" + departure[0] + ";" + departure[1] + ";" + speed + ";" + airport + ";" + fuel + ";" + state + ";" + date + ";" + distance + ";" + duration ;
+        return identification + ";" + airplane.getName().substring(0, 9) + ";" + passagers + ";" + destination[0] + ";"  + destination[1] + ";" + departure[0] + ";" + departure[1] + ";" + speed + ";" + airport.getName().substring(0, 9) + ";" + fuel + ";" + state + ";" + date + ";" + distance + ";" + duration ;
     }
 
     public String getIdentification() {
@@ -132,7 +132,7 @@ public class Flight implements Serializable{
     //Defining tracks, which will be used during takeoff and landing.
     public void setTakeOffTrack(String takeOffTrack)
     {
-        this.takeOffTrack = this.takeOffTrack;
+        this.takeOffTrack = takeOffTrack;
     }
     
     public String getTakeOffTrack()
@@ -143,7 +143,7 @@ public class Flight implements Serializable{
     
     public void setLandingTrack(String landingTrack)
     {
-        this.landingTrack = this.landingTrack;
+        this.landingTrack = landingTrack;
     }
     
     public String getLandingTrack()
