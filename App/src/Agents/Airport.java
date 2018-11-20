@@ -5,6 +5,7 @@ import Models.Track;
 import Models.Operation;
 import Models.Order;
 import Models.Request;
+import Models.Slot;
 import Models.TakeOff;
 import jade.core.Agent;
 import java.util.Random;
@@ -32,8 +33,7 @@ public class Airport extends Agent {
     int arg2, arg1;
     private int max_airplanes;
     private List<Track> allocated_tracks = new ArrayList<>();//tracks available
-    private List<AID> allocated_Airplanes = new ArrayList<>();//airplanes present here
-    private List<AID> reserved_Spaces = new ArrayList<>();// airplanes that will come here
+    private List<Slot> allocated_Airplanes = new ArrayList<>();//airplanes and if they are coming here/here/ not here
     private List<Flight> allocated_Flights = new ArrayList<>();
     private List<Operation> Operations = new ArrayList<>();//queue of operations
 
@@ -53,7 +53,7 @@ public class Airport extends Agent {
         return allocated_tracks;
     }
 
-    public List<AID> getAllocated_Airplanes() {
+    public List<Slot> getAllocated_Airplanes() {
         return allocated_Airplanes;
     }
 
@@ -154,7 +154,8 @@ public class Airport extends Agent {
                 for (int i = 0; i < numplanes; ++i) {
                     airplanes[i] = result[i].getName();
                     System.out.println(airplanes[i].getName());
-                    allocated_Airplanes.add(airplanes[i]);
+                    allocated_Airplanes.add(new Slot(airplanes[i], true));
+                    //allocated_Airplanes.add(airplanes[i]);
                     pb.addSubBehaviour(new setAirplanesLocation(location, airplanes[i]));
                 }
             } catch (FIPAException e) {
@@ -184,7 +185,13 @@ public class Airport extends Agent {
                     switch (msg.getPerformative()) {
                         case ACLMessage.CFP:
                             JSONObject packet = new JSONObject();
-                            if ((allocated_Airplanes.size() + reserved_Spaces.size()) <= max_airplanes) {
+                            List<Slot> spaces = new ArrayList<>();
+                            for(Slot s : allocated_Airplanes){
+                                if(s.getType() != 2){
+                                    spaces.add(s);
+                                }
+                            }
+                            if (spaces.size() <= max_airplanes) {
 
                                 System.out.println("Sou o aeroporto: " + getLocalName() + "e recebi pedido do: " + msg.getSender().getLocalName());
                                 packet.put("state", 1);
@@ -197,7 +204,7 @@ public class Airport extends Agent {
                             sendMessage(ACLMessage.INFORM_IF, new AID[]{msg.getSender()}, packet.toString());
                             break;
                         case ACLMessage.INFORM_IF:
-                            if (receivedPacket.has("state") && receivedPacket.has("lat") && receivedPacket.has("lon") && receivedPacket.has("Airplane")) {
+                            if (receivedPacket.has("state")) {
                                 numAeroportosProcessados++;
                                 System.out.println(getLocalName() + ": inquire received" + (numAeroportosProcessados) + "," + (arg2 - 1));
                                 if (receivedPacket.getInt("state") == 1) {
@@ -213,10 +220,10 @@ public class Airport extends Agent {
                                     destino[0] = please.getInt("lat");
                                     destino[1] = please.getInt("lon");
                                     int passengers = rand.nextInt((100 - 50 + 1) + 50);
-                                    Flight flight = new Flight(String.valueOf(arg1), allocated_Airplanes.get(please.getInt("Airplane")), passengers, destino, origem, 10, airports.get(index), 50);
+                                    Flight flight = new Flight(String.valueOf(arg1), allocated_Airplanes.get(please.getInt("Airplane")).getAirplane(), passengers, destino, origem, 10, airports.get(index), 50);
                                     for (int i = 0; i < Operations.size(); i++) {
                                         Operation op = Operations.get(i);
-                                        if (op.getRequest().getReceiver().equals(allocated_Airplanes.get(please.getInt("Airplane"))) && op.getRequest().getSender().equals(getAID())) {
+                                        if (op.getRequest().getReceiver().equals(allocated_Airplanes.get(please.getInt("Airplane")).getAirplane()) && op.getRequest().getSender().equals(getAID())) {
                                             Operations.get(i).setType(0);
                                             Operations.get(i).setFlight(flight);
                                             i = Operations.size();
@@ -229,7 +236,7 @@ public class Airport extends Agent {
                                     //to airplane
                                     JSONObject packet2 = new JSONObject();
                                     packet2.put("Flight", flight.getMsg());
-                                    sendMessage(ACLMessage.INFORM, new AID[]{allocated_Airplanes.get(please.getInt("Airplane"))}, packet2.toString());
+                                    sendMessage(ACLMessage.INFORM, new AID[]{allocated_Airplanes.get(please.getInt("Airplane")).getAirplane()}, packet2.toString());
                                     numAeroportosProcessados = 0;
                                     what.removeAll(what);
                                 }
@@ -251,26 +258,23 @@ public class Airport extends Agent {
                                     track.setState(0);
                                     allocated_tracks.set(index, track);
                                 }
-                                /*Operation op = Operations.stream().filter(x -> x.getRequest().getFlight().getAirplane().equals(msg.getSender())).findAny().orElse(null);
+                                Operation op = Operations.stream().filter(x -> x.getRequest().getFlight().getAirplane().equals(msg.getSender())).findAny().orElse(null);
                                 //If object exits.
                                 if (op != null) {
                                     //Removes from list.
-                                    Operations.remove(op);
-                                    //System.out.println("Airplane" + op.getRequest().getFlight().getAirplane().getLocalName() + " took off from " + getLocalName());
+                                    int idx = Operations.indexOf(op);
+                                    op.setType(2);
+                                    System.out.println("Changed Operation"+idx+" to inactive");
+                                    Operations.set(idx, op);
                                 }
-                                AID airplane = msg.getSender();
-                                if (airplane != null) {
-                                    int idx = allocated_Airplanes.indexOf(airplane);
-                                    System.out.println("---------------airplane idx:"+ idx);
-                                    if (idx > -1) {
-                                        
-                                        System.out.println("---------------airplanes:"+ allocated_Airplanes.size());
-                                        for(AID i : allocated_Airplanes){
-                                            System.out.println(i.getLocalName());
-                                        }
-                                        allocated_Airplanes.remove(idx);
-                                    }
-                                }*/
+                                Slot slot = allocated_Airplanes.stream().filter(x -> x.getAirplane().equals(msg.getSender())).findAny().orElse(null);
+                                if (slot != null) {
+                                    //Removes from list.
+                                    int idx = allocated_Airplanes.indexOf(slot);
+                                    slot.setType(2);
+                                    System.out.println("Changed Slot"+idx+" to not used");
+                                    allocated_Airplanes.set(idx, slot);
+                                }
 
                             } else if (receivedPacket.has(Flight.Confirmation.Landing.toString())) {
                                 //Gets track id that was allocated to a flight
@@ -286,17 +290,35 @@ public class Airport extends Agent {
                                     track.setState(0);
                                     allocated_tracks.set(index, track);
                                 }
-                                /*allocated_Airplanes.add(msg.getSender());
-                                reserved_Spaces.remove(msg.getSender());
-                                Operation op = Operations.stream().filter(x -> x.getRequest().getFlight().getAirplane().equals(msg.getSender())).findAny().orElse(null);
+                                Slot slot = allocated_Airplanes.stream().filter(x -> x.getAirplane().getName().substring(0, 9).equals(msg.getSender().getName().substring(0, 9))).findAny().orElse(null);
+                                if (slot != null) {
+                                    //Removes from list.
+                                    int idx = allocated_Airplanes.indexOf(slot);
+                                    slot.setType(0);
+                                    allocated_Airplanes.set(idx, slot);
+                                    slot = allocated_Airplanes.get(idx);
+                                    System.out.println("Changed Slot"+idx+" to in storage");
+                                    
+                                }
+                                Operation op = Operations.stream().filter(x -> x.getRequest().getFlight().getAirplane().getName().substring(0, 9).equals(msg.getSender().getName().substring(0, 9))).findAny().orElse(null);
                                 //If object exits.
                                 if (op != null) {
                                     //Removes from list.
-                                    Operations.remove(op);
+                                    int idx = Operations.indexOf(op);
+                                    op.setType(2);
+                                    System.out.println("Changed Operation"+idx+" to inactive");
+                                    Operations.set(idx, op);
                                 }
-                                System.out.println("Airplane" + msg.getSender().getLocalName() + " Landed in " + getLocalName());*/
                             } else if (receivedPacket.has("Airplane")) {
-                                reserved_Spaces.add(new AID(receivedPacket.getString("Airplane"),false));
+                                Slot slot = allocated_Airplanes.stream().filter(x -> x.getAirplane().equals(msg.getSender())).findAny().orElse(null);
+                                if(slot != null){
+                                    //updates type from list.
+                                    int idx = allocated_Airplanes.indexOf(slot);
+                                    slot.setType(1);
+                                    allocated_Airplanes.set(idx, slot);
+                                }else{
+                                    allocated_Airplanes.add(new Slot(new AID(receivedPacket.getString("Airplane").substring(0, 9),false), false));
+                                }
                                 System.out.println(getLocalName() + " reserved 1 space");
                             }
                             break;
@@ -366,18 +388,24 @@ public class Airport extends Agent {
         protected void onTick() {
             //assign flight to free airplane
             List<Integer> lista = new ArrayList<>();
+            List<Slot> spaces = new ArrayList<>();
+            //Check which airplanes are in storage
+            for(Slot s : allocated_Airplanes){
+                System.out.println(s.getAirplane().getName()+"Airplane type:"+s.getType());
+                if(s.getType() == 0){
+                    spaces.add(s);
+                }
+            }
+            //0 if airplane is in storage without operation, 1- if it has operation
             lab1:
-            for (int i = 0; i < allocated_Airplanes.size(); i++) {
+            for (int i = 0; i < spaces.size(); i++) {
                 lista.add(0);
                 for (int j = 0; j < Operations.size(); j++) {
-                    if (allocated_Airplanes.get(i).equals(Operations.get(j).getRequest().getReceiver())) {
+                    if (spaces.get(i).getAirplane().getName().substring(0, 9).equals(Operations.get(j).getRequest().getReceiver().getName().substring(0, 9)) && Operations.get(j).getType() !=2) {
                         lista.set(i, 1);
                         continue lab1;
                     }
                 }
-            }
-            for (int i = 0; i < lista.size(); i++) {
-                System.out.println(allocated_Airplanes.get(i).getLocalName() + ":" + lista.get(i));
             }
 
             for (int i = 0; i < lista.size(); i++) {
@@ -386,7 +414,7 @@ public class Airport extends Agent {
                         JSONObject packet = new JSONObject();
                         packet.put("Airplane", String.valueOf(i));
 
-                        Request req = new Request(arg1 + "REQ" + new Random().nextInt(1000000), getAID(), allocated_Airplanes.get(i), 0);
+                        Request req = new Request(arg1 + "REQ" + new Random().nextInt(1000000), getAID(), spaces.get(i).getAirplane(), 0);
                         Operation op = new Operation(req, -1);
                         Operations.add(op);
                         AID[] airports = new AID[arg2 - 1];
@@ -469,6 +497,7 @@ public class Airport extends Agent {
                                 op.setOrder(order);
                                 op.setType(1);
                                 Operations.set(Operations.indexOf(opOriginal), op);
+                                
 
                                 //Changing track state to occupied.
                                 track.setState(1);

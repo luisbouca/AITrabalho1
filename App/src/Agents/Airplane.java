@@ -136,9 +136,11 @@ public class Airplane extends Agent {
                                     //Setting track to flight
                                     flight.setTakeOffTrack(receivedPacket.getString(Order.Type.TakeOff.toString()));
                                     flight.setState(1); //Changing flight status.
-
+                                    
+                                    JSONObject packet = new JSONObject();
+                                    packet.put(Flight.Confirmation.TakeOff.toString(), receivedPacket.getString(Order.Type.TakeOff.toString()));
                                     //Sending a confirmation message to airport.
-                                    sendMessage(ACLMessage.CONFIRM, new AID[]{msg.getSender()}, new JSONObject().put(Flight.Confirmation.TakeOff.toString(), receivedPacket.getString(Order.Type.TakeOff.toString())).toString());
+                                    sendMessage(ACLMessage.CONFIRM, new AID[]{msg.getSender()}, packet.toString());
 
                                     System.out.println("Sou o aviao: " + getLocalName() + " com destino a: " + flight.getDestination()[0] + ", " + flight.getDestination()[1]);
                                     //change container
