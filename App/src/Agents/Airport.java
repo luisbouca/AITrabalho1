@@ -104,7 +104,7 @@ public class Airport extends Agent {
         //receiver behaviour that will handle every message received
         this.addBehaviour(new Receiver());
         //ticker behaviour, will handle the queue and flight assignment
-        this.addBehaviour(new CheckOperations(this, 10000));
+        this.addBehaviour(new CheckOperations(this, 5000));
         
         super.setup();
     }
@@ -271,6 +271,8 @@ public class Airport extends Agent {
                                 System.out.println(getLocalName()+" reserved 1 space");
                             }   
                             break;
+                        case ACLMessage.INFORM:
+
                         default:
                             break;
                     }

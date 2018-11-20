@@ -2,6 +2,11 @@ package Agents;
 
 import Models.Flight;
 import Models.Order;
+import Models.Request;
+import jade.content.lang.Codec;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.basic.Action;
+import jade.content.onto.basic.Result;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.ContainerID;
@@ -11,9 +16,23 @@ import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.domain.FIPANames;
+import jade.domain.JADEAgentManagement.JADEManagementOntology;
+import jade.domain.JADEAgentManagement.QueryAgentsOnLocation;
 import jade.lang.acl.ACLMessage;
+
+
+import java.util.Arrays;
+
+
+
 import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import org.json.JSONArray;
+
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 public class Airplane extends Agent {
 
@@ -24,7 +43,9 @@ public class Airplane extends Agent {
     private int max_speed;//km/s(1 unidade = 10km)(1s = 1h)
     private int max_fuel;
     private int safety_area;
-    private int[] location = new int[2];//Latitude|Longitude
+    private int[] location = new int[2];//Latitude|Longitude //Current agent location.
+    
+    private BlockingQueue<Neighbour> neighbours = new ArrayBlockingQueue<>(1000); //List of neighbours agents which may result in collision. 
 
     public String getMake() {
         return make;
@@ -56,6 +77,8 @@ public class Airplane extends Agent {
 
     @Override
     protected void setup() {
+        
+        
         Random random = new Random();
 
         //get the arguments passed by the controller
@@ -96,6 +119,9 @@ public class Airplane extends Agent {
         }
         this.addBehaviour(new Receiver());
         this.addBehaviour(new movePlane(this, 2000));
+       
+
+        
         super.setup();
     }
 
@@ -104,11 +130,20 @@ public class Airplane extends Agent {
 
         @Override
         public void action() {
+
             ACLMessage msg = receive();
             if (msg != null) {
                 try{
-                    //Getting communication data packet.
-                    JSONObject receivedPacket = new JSONObject(msg.getContent());
+   
+                    JSONObject receivedPacket = null;
+                    try   //Try catch for messsages that are not null or that cannot be converted to json.
+                    {
+                       //Getting communication data packet.
+                        receivedPacket = new JSONObject(msg.getContent());
+                    }
+                    catch(Exception ex){
+                    }
+                    
                     switch (msg.getPerformative()) {
                         case ACLMessage.CFP:
                             if(receivedPacket.has("lat") && receivedPacket.has("lon")){
@@ -118,11 +153,62 @@ public class Airplane extends Agent {
                             }
                             break;
                         case ACLMessage.INFORM:
-                            if(receivedPacket.has("Flight")){
+                            
+                            if(receivedPacket != null && receivedPacket.has("Flight")){
                                 System.out.println("received flight");
                                 flight = new Flight(receivedPacket.getString("Flight"));
                                 System.out.println("Informação do voo: "+flight.getDestination()[0]+","+flight.getDestination()[1]);
                             }
+                            else if(receivedPacket != null && receivedPacket.has(Request.Type.Information.toString())) //Receiving informations from another airplanes
+                            {
+                                JSONObject subPacket = receivedPacket.getJSONObject(Request.Type.Information.toString());
+                                
+                                if(subPacket.has("location")) //If there is any location attribute.
+                                {
+                                    //Converting string to json array, in order to extract location latitude and longitude.
+                                    JSONArray locationArray = (JSONArray) new JSONObject(new JSONTokener("{arr:"+ subPacket.getString("location")+"}")).get("arr");
+                                    //Checking if lat or long is <= than safety_area.
+                                    //if(((locationArray.getInt(0) - getLocation()[0]) <= safety_area) || ((locationArray.getInt(1) - getLocation()[1]) <= safety_area))
+                                    
+                                    
+                                    
+                                    //if((int) Math.sqrt(((Math.pow((locationArray.getInt(0) - getLocation()[0]), 2)) + (Math.pow((locationArray.getInt(1) - getLocation()[1]), 2))))+0.5 <= safety_area)
+                                    if(true)
+                                    {
+                                        //Building Neighbour object.
+                                        Neighbour neighbour = new Neighbour();
+                                            neighbour.setAID(msg.getSender());
+       
+                                        if(subPacket.has("speed"))
+                                             neighbour.setSpeed(subPacket.getInt("speed"));
+                                        if(subPacket.has("fuel"))
+                                            neighbour.setSpeed(subPacket.getInt("fuel"));
+                                        if(subPacket.has("location"))
+                                            neighbour.setLocation(new int[]{locationArray.getInt(0), locationArray.getInt(1)});
+                                        if(subPacket.has("destination"))
+                                        {
+                                            //Converting string to json array, in order to extract destination latiture and longitude.
+                                            JSONArray destinationArray = (JSONArray) new JSONObject(new JSONTokener("{arr:"+ subPacket.getString("location")+"}")).get("arr");
+                                            neighbour.setDestination(new int[] {destinationArray.getInt(0), destinationArray.getInt(1)});
+                                        }
+                                        neighbours.put(neighbour);
+                                    }             
+                                }
+                            }
+                            else
+                            {
+                                //Sending Requests information to all flights.
+                                //Getting message from AMS agent.
+                                jade.util.leap.Iterator it = ((Result) getContentManager().extractContent(msg)).getItems().iterator();
+                                    while(it.hasNext()) //Iterating over a result list, that was retrieved by AMS Agent.
+                                    { 
+                                        //Gets current agent aid
+                                        AID aid = (AID) it.next();
+                                        if(aid.getName().startsWith("Airplane") && aid != getAID()) //Sending request information, to all agents that are not this current agent or an airport agent.
+                                            sendMessage(ACLMessage.INFORM, new AID[]{aid}, new JSONObject().put(Request.Type.Information.toString(), new JSONObject().put("speed", flight.getSpeed()).put("location", Arrays.toString(getLocation())).put("fuel", flight.getFuel()).put("destination", Arrays.toString(flight.getDestination()))).toString());
+                                    }
+                            } 
+                               
                             break;
                         case ACLMessage.CONFIRM:
                             //Checks if it is a takeoff order
@@ -133,7 +219,7 @@ public class Airplane extends Agent {
                                 flight.setState(1); //Changing flight status.
                                 
                                 //Sending a confirmation message to airport.
-                                sendMessage(ACLMessage.CONFIRM,msg.getSender(), new JSONObject().put(Flight.Confirmation.TakeOff.toString(), receivedPacket.getString(Order.Type.TakeOff.toString())).toString());
+                                sendMessage(ACLMessage.CONFIRM, new AID[]{msg.getSender()}, new JSONObject().put(Flight.Confirmation.TakeOff.toString(), receivedPacket.getString(Order.Type.TakeOff.toString())).toString());
                                 
                                 System.out.println("Sou o aviao: "+getLocalName()+ " com destino a: "+flight.getDestination()[0]+", "+flight.getDestination()[1]);
                                 //change container
@@ -147,7 +233,7 @@ public class Airplane extends Agent {
                                 flight.setState(3); //Changing flight status.
                                 
                                 //Sending a confirmation message to airport.
-                                sendMessage(ACLMessage.CONFIRM,msg.getSender(), new JSONObject().put(Flight.Confirmation.Landing.toString(), receivedPacket.getString(Order.Type.Landing.toString())).toString());
+                                sendMessage(ACLMessage.CONFIRM, new AID[]{msg.getSender()}, new JSONObject().put(Flight.Confirmation.Landing.toString(), receivedPacket.getString(Order.Type.Landing.toString())).toString());
                                 
                                 //change container
                                 ContainerID destination = new ContainerID();
@@ -155,6 +241,9 @@ public class Airplane extends Agent {
                                 System.out.println(getLocalName()+" -> Moving to Container " + destination.getName());
                                 doMove(destination); 
                             }   break;
+                        case ACLMessage.REQUEST:
+
+                            break;
                         default:
                             break;
                     }
@@ -165,13 +254,18 @@ public class Airplane extends Agent {
         }
     }
 
+
+   
     //Sending an message.
-    private void sendMessage(int performative,AID receiver, String packet)
+    private void sendMessage(int performative, AID[] receivers, String packet)
     {
-        ACLMessage msg = new ACLMessage(performative);
-        msg.setContent(packet);
-        msg.addReceiver(receiver);
-        send(msg);
+        for(AID receiver:receivers)
+        {
+            ACLMessage msg = new ACLMessage(performative);
+                msg.setContent(packet);
+                msg.addReceiver(receiver);
+            send(msg);
+        }
     }
 
     private class movePlane extends TickerBehaviour {
@@ -179,6 +273,7 @@ public class Airplane extends Agent {
 
         public movePlane(Agent a, long period) {
             super(a, period);
+          
         }
 
         @Override
@@ -189,20 +284,58 @@ public class Airplane extends Agent {
                     if(distanceTemp<safety_area){
                         //Faz pedido de atterragem
                     }else{
-                        //Continua a movimentar-se
-                    
                         
-                        
-                        
-                        
-                        location = getOptimalNextLocation(flight.getDestination(), location); 
-                        System.out.println("I am: "+getLocalName()+" My new location is: "+location[0]+", "+location[1]); 
+                        try
+                        {
+                           //Requesting AMS to get a list of agents in this current container.
+                           requestAMS();
+                           //If there is any agent that is dangerously closer.
+                           if(neighbours.size() > 0)
+                               negotiate(); //Starts a negotiation.
+                           else //Moving normally this airplane.
+                               moving();
+                               
+                        }
+                        catch(Exception ex)
+                        {
+                             System.console().printf("Exception: "+ex.getMessage());
+                        }
                     }
                 }
             }
 
         }
-
+        
+        private void negotiate()
+        {
+            try 
+            {
+                //Checking which agent is closely to this agent.
+                
+                while(neighbours.iterator().hasNext()) //It could be more than one agent.
+                {
+                    Neighbour obj = neighbours.take();  
+                    
+                    
+                        System.out.println("agent location"+obj.location);
+                
+                    
+                
+                }
+            }
+            catch(Exception ex)
+            {  
+                System.console().printf("Exception: "+ex.getMessage());    
+            }
+        }
+        
+        private void moving()
+        {
+            //Moving normally.
+            location = getOptimalNextLocation(flight.getDestination(), location); 
+            System.out.println("I am: "+getLocalName()+" My new location is: "+location[0]+", "+location[1]); 
+        }
+       
         private int[] getOptimalNextLocation(int[] destino, int[] localizacaoAtual) {
             int x1, x2, y1, y2, width;
             int[]localizacao = new int[2];
@@ -225,6 +358,93 @@ public class Airplane extends Agent {
             // chose next location of the plane
             return localizacao;
         }
+        
+        
+        private void requestAMS() throws Codec.CodecException
+        {
+            try
+            {
+                QueryAgentsOnLocation ca = new QueryAgentsOnLocation();
+                    ca.setLocation(here()); //Getting current agent location.
 
+                Action actExpr = new Action(getAMS(), ca);
+
+                myAgent.getContentManager().registerLanguage(new SLCodec(), FIPANames.ContentLanguage.FIPA_SL);
+                myAgent.getContentManager().registerOntology(JADEManagementOntology.getInstance());
+                
+                ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+                    request.addReceiver(getAMS());
+                    request.setOntology(JADEManagementOntology.getInstance().getName());
+                    request.setLanguage(FIPANames.ContentLanguage.FIPA_SL);
+                    request.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+                myAgent.getContentManager().fillContent(request, actExpr);
+                send(request);
+               
+            }
+            catch(Exception ex)
+            {
+                System.console().printf("Exception: "+ex.getMessage());
+            }
+        }
+        
+        
     }
+    
+    
+    private class Neighbour{
+        
+        private AID aid;
+        private int speed;
+        private int[] location;
+        private int[] destination;
+        private int fuel;
+        
+        private Neighbour()
+        {
+            
+        }
+        
+        public void setAID(AID aid)
+        {
+            this.aid = aid;
+        }
+        
+        public void setSpeed(int speed)
+        {
+           this.speed = speed; 
+        }
+        
+        public void setLocation(int[] location)
+        {
+            this.location = location;
+        }
+        
+        public void setDestination(int[] destination)
+        {
+            this.destination = destination;
+        }
+        
+        
+        public AID getAID()
+        {
+            return this.aid;
+        }
+        
+        public int getSpeed()
+        {
+            return this.speed;
+        }
+        
+        public int[] getLocation()
+        {
+            return this.location;
+        }
+
+        public int[] getDestination()
+        {
+            return this.location;
+        }
+    }
+    
+     
 }

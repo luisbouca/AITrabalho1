@@ -6,6 +6,14 @@ public class Request extends Communication{
     private Flight flight;
     private int type;//o - take off, 1- Landing, 2- Weather
 
+    public enum Type {
+        Weather,
+        TakeOff,
+        Landing,
+        Information,
+        NewRoute;
+    }
+    
     public Request(String identification, AID sender, AID receiver, int type) {
         super(identification, sender, receiver);
         this.type = type;
