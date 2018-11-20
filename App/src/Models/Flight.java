@@ -28,7 +28,8 @@ public class Flight implements Serializable{
         Speed,
         Direction,
         State,
-        Destinatio;
+        Destinatio,
+        Information;
     }
     
     

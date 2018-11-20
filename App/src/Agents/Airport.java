@@ -104,7 +104,6 @@ public class Airport extends Agent {
         this.addBehaviour(new Receiver());
         //ticker behaviour, will handle the queue and flight assignment
         this.addBehaviour(new CheckOperations(this, 5000));
-
         super.setup();
     }
 
@@ -331,6 +330,8 @@ public class Airport extends Agent {
                                 Operations.add(op);
                             }
                             break;
+                        case ACLMessage.INFORM:
+
                         default:
                             block();
                             break;
