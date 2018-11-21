@@ -11,8 +11,8 @@ public class Controller {
     
    
     private static MainContainer mainContainer; 
-    private static List<ContainerController> ContainerControllers; 
-    private static int num_airports=4,num_airplanes=4;
+    private static List<ContainerController> ContainerControllers;
+    private static int num_airports=4,num_airplanes=3;
 
     public static void main(String[] args) 
     {
