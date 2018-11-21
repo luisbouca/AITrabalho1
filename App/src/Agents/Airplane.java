@@ -22,6 +22,7 @@ import jade.domain.JADEAgentManagement.JADEManagementOntology;
 import jade.domain.JADEAgentManagement.QueryAgentsOnLocation;
 import jade.lang.acl.ACLMessage;
 import jade.tools.gui.AIDAddressList;
+import java.io.Serializable;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -253,6 +254,7 @@ public class Airplane extends Agent {
                                     location = flight.getDestination();
                                     destination.setName("Container" + flight.getAirport().getName().substring(8, 9));
                                     System.out.println(getLocalName() + " -> Moving to Container " + destination.getName());
+                                    neighbours.clear();
                                     doMove(destination);
                                     System.out.println("Atterrou");
                                 }
@@ -297,7 +299,7 @@ public class Airplane extends Agent {
             if (flight != null) {
                 if (flight.getState() == 1) {
                     distanceTemp = Math.sqrt(((Math.pow((flight.getDestination()[0] - location[0]), 2)) + (Math.pow((flight.getDestination()[1] - location[1]), 2))));
-                    System.out.println("distance="+distanceTemp);
+                    System.out.println("distance=" + distanceTemp);
                     if (distanceTemp < safety_area) {
                         //Faz pedido de atterragem
                         System.out.println("In RANGE");
@@ -315,8 +317,9 @@ public class Airplane extends Agent {
                             requestAMS();
                             //If there is any agent that is dangerously closer.
                             if (neighbours.size() > 0) {
-                                negotiate(); //Starts a negotiation.
-                            } else{ //Moving normally this airplane.
+                                //negotiate(); //Starts a negotiation.
+                                moving();
+                            } else { //Moving normally this airplane.
                                 moving();
                             }
 
@@ -337,7 +340,113 @@ public class Airplane extends Agent {
                 {
                     Neighbour obj = neighbours.take();
 
-                    System.out.println("agent location" + obj.location[0]+"/"+obj.location[1]);
+                    System.out.println("agent location" + obj.location[0] + "/" + obj.location[1]);
+                    
+                    int distPlaneX = location[0] - obj.getLocation()[0];
+                    int distPlaneDestX = location[0] - obj.getDestination()[0];
+                    int distDestX = location[0] - flight.getDestination()[0];
+                    
+                    int distPlaneY = location[1] - obj.getLocation()[1];
+                    int distPlaneDestY = location[1] - obj.getDestination()[1];
+                    int distDestY = location[1] - flight.getDestination()[1];
+                    
+                    int distPlaneToPlaneDestY = obj.getLocation()[1] - obj.getDestination()[1];
+                    int distDestToPlaneDestY = flight.getDestination()[1] - obj.getDestination()[1];
+                    
+                    if (distPlaneX == 0) {//neighbour in same X as us
+                        if (distPlaneDestX == 0) {//neighbour destination in same X as us
+                            if (distDestX == 0) {//our destination is in same X as us
+                                if (distPlaneY >0) {//neighbour is below us
+                                    if (distPlaneDestY==0) {//neighbour destination in same possition as us
+                                        if (distDestY >0) {//our destination is below us
+                                            //colision suggest right or left
+                                        }
+                                    }else if(distPlaneDestY>0){//neighbour destination below us
+                                        if(distDestY >0 ){//our destination is below us
+                                            if(distPlaneToPlaneDestY<0 && distDestToPlaneDestY<0){//neighbour destination above neighbour and our destination
+                                                //colision suggest right or left
+                                            }
+                                        }
+                                    }else{//neighbour destination above us
+                                        if(distDestY >0){//our destination is below us
+                                            //colision suggest right or left
+                                            //not 100% true
+                                        }
+                                    }
+                                }else if(distPlaneY<0){//neighbour is above us
+                                    if (distPlaneDestY==0) {//neighbour destination in same possition as us
+                                        if (distDestY <0) {//our destination is above us
+                                            //colision suggest right or left
+                                        }
+                                    }else if(distPlaneDestY>0){//neighbour destination below us
+                                        if(distDestY <0){//our destination is above us
+                                            //colision suggest right or left
+                                            //not 100% true
+                                        }
+                                    }else{//neighbour destination above us
+                                        if(distDestY <0 ){//our destination is above us
+                                            if(distPlaneToPlaneDestY>0 && distDestToPlaneDestY>0){//neighbour destination below neighbour and our destination
+                                                //colision suggest right or left
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (distPlaneDestX > 0) {//neighbour destination is to our left
+                            if (distDestX > 0) {//our destination is to our left
+                                if (distPlaneY>0) {//neighbour below us
+                                    if (distDestToPlaneDestY<0) {//neighbour destination sbove our destination
+                                        //colision suggest top or bottom
+                                    }
+                                }else if (distPlaneY<0) {//neighbour above us
+                                    if (distDestToPlaneDestY>0) {//neighbour destination below our destination
+                                        //colision suggest top or bottom
+                                    }
+                                }
+                            }
+                        } else if (distDestX < 0) {//neighbour and our destination is to our right
+                            if (distPlaneY>0) {//neighbour below us
+                                if (distDestToPlaneDestY<0) {//neighbour destination sbove our destination
+                                    //colision suggest top or bottom
+                                }
+                            }else if (distPlaneY<0) {//neighbour above us
+                                if (distDestToPlaneDestY>0) {//neighbour destination below our destination
+                                    //colision suggest top or bottom
+                                }
+                            }
+                        }
+                    } else if (distPlaneX > 0) {//neighbour to our left
+                        if (distPlaneDestX == 0) {//neighbour destination in same X as us
+                            if (distDestX > 0) {//our destination is to our left
+                                //possible collision Scene 2
+                            }
+                        } else if (distPlaneDestX > 0) {//neighbour destination is to our left
+                            if (distDestX > 0) {//our destination is to our left
+                                //possible collision Scene 2
+                            }
+                        } else if (distDestX == 0) {//our destination is in same X as us
+                            //possible collision Scene 2
+                        } else if (distDestX > 0) {//our destination is to our left
+                            //possible collision Scene 2
+                        } else {
+                            //possible collision Scene 2
+                        }
+                    } else//neighbour to our right
+                    if (distPlaneDestX == 0) {//neighbour destination in same X as us
+                        if (distDestX > 0) {//our destination is to our left
+                            //possible collision Scene 2 inverted
+                        }
+                    } else if (distPlaneDestX > 0) {//neighbour destination is to our left
+                        if (distDestX == 0) {//our destination is in same X as us
+                            //possible collision Scene 2 inverted
+                        } else if (distDestX > 0) {//our destination is to our left
+                            //possible collision Scene 2 inverted
+                        } else {
+                            //possible collision Scene 2 inverted
+                        }
+                    } else if (distDestX < 0) {//our destination is to our right
+                        //possible collision Scene 2 inverted
+                    }
 
                 }
             } catch (Exception ex) {
@@ -364,7 +473,7 @@ public class Airplane extends Agent {
             height = y2 - y1;//gets difrence between the points in the y axis
             int yratio = (int) ((ratio * speed) + 0.5);// calculates the ratio with speed
             // if there is no diference between the points in the X axis
-            System.out.println("width = "+width+"|heigh="+height+"|yratio = "+yratio+"|speed="+speed+"|ratio ="+ratio);
+            System.out.println("width = " + width + "|heigh=" + height + "|yratio = " + yratio + "|speed=" + speed + "|ratio =" + ratio);
             if (width == 0) {
                 // if the current location is the destination
                 if (height == 0) {
@@ -424,8 +533,7 @@ public class Airplane extends Agent {
                     }
                 }
             } else // if the destination is directly to the right of the current location
-            {
-                if (height == 0) {
+             if (height == 0) {
                     if ((x1 + (speed - yratio)) > 0) {
                         localizacao[0] = x1 + (speed - yratio);
                     } else {
@@ -457,7 +565,6 @@ public class Airplane extends Agent {
                         localizacao[1] = 0;
                     }
                 }
-            }
             return localizacao;
         }
 
@@ -486,7 +593,7 @@ public class Airplane extends Agent {
 
     }
 
-    private class Neighbour {
+    private class Neighbour implements Serializable{
 
         private AID aid;
         private int speed;

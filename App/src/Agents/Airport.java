@@ -178,6 +178,7 @@ public class Airport extends Agent {
         public void action() {
             ACLMessage msg = receive();
             if (msg != null) {
+                if(msg.getPerformative()!=ACLMessage.FAILURE){
                 try {
                     //Getting communication data packet.
                     JSONObject receivedPacket = new JSONObject(msg.getContent());
@@ -197,7 +198,7 @@ public class Airport extends Agent {
                                 packet.put("state", 1);
                                 packet.put("lat", location[0]);
                                 packet.put("lon", location[1]);
-                                packet.put("Airplane", receivedPacket.getInt("Airplane"));
+                                packet.put("Airplane", receivedPacket.getString("Airplane"));
                             } else {
                                 packet.put("state", 0);
                             }
@@ -220,10 +221,10 @@ public class Airport extends Agent {
                                     destino[0] = please.getInt("lat");
                                     destino[1] = please.getInt("lon");
                                     int passengers = rand.nextInt((100 - 50 + 1) + 50);
-                                    Flight flight = new Flight(String.valueOf(arg1), allocated_Airplanes.get(please.getInt("Airplane")).getAirplane(), passengers, destino, origem, 10, airports.get(index), 50);
+                                    Flight flight = new Flight(String.valueOf(arg1), new AID(please.getString("Airplane"),false), passengers, destino, origem, 10, airports.get(index), 50);
                                     for (int i = 0; i < Operations.size(); i++) {
                                         Operation op = Operations.get(i);
-                                        if (op.getRequest().getReceiver().equals(allocated_Airplanes.get(please.getInt("Airplane")).getAirplane()) && op.getRequest().getSender().equals(getAID())) {
+                                        if (op.getRequest().getReceiver().equals(new AID(please.getString("Airplane"),false)) && op.getRequest().getSender().equals(getAID())) {
                                             Operations.get(i).setType(0);
                                             Operations.get(i).setFlight(flight);
                                             i = Operations.size();
@@ -236,7 +237,7 @@ public class Airport extends Agent {
                                     //to airplane
                                     JSONObject packet2 = new JSONObject();
                                     packet2.put("Flight", flight.getMsg());
-                                    sendMessage(ACLMessage.INFORM, new AID[]{allocated_Airplanes.get(please.getInt("Airplane")).getAirplane()}, packet2.toString());
+                                    sendMessage(ACLMessage.INFORM, new AID[]{new AID(please.getString("Airplane"),false)}, packet2.toString());
                                     numAeroportosProcessados = 0;
                                     what.removeAll(what);
                                 }
@@ -358,6 +359,7 @@ public class Airport extends Agent {
                     System.console().printf("Exception: " + ex.getMessage());
                     ex.printStackTrace();
                 }
+                }
             }
 
         }
@@ -420,7 +422,9 @@ public class Airport extends Agent {
             for (int i = 0; i < spaces.size(); i++) {
                 lista.add(0);
                 for (int j = 0; j < Operations.size(); j++) {
-                    if (spaces.get(i).getAirplane().getName().substring(0, 9).equals(Operations.get(j).getRequest().getReceiver().getName().substring(0, 9)) && Operations.get(j).getType() != 2) {
+
+                    if (spaces.get(i).getAirplane().getName().substring(0, 10).equals(Operations.get(j).getRequest().getReceiver().getName().substring(0, 10)) && Operations.get(j).getType() !=2) {
+
                         lista.set(i, 1);
                         continue lab1;
                     }
@@ -431,7 +435,7 @@ public class Airport extends Agent {
                 if (lista.get(i) == 0) {
                     try {
                         JSONObject packet = new JSONObject();
-                        packet.put("Airplane", String.valueOf(i));
+                        packet.put("Airplane", spaces.get(i).getAirplane().getName().substring(0, 10));
 
                         Request req = new Request(arg1 + "REQ" + new Random().nextInt(1000000), getAID(), spaces.get(i).getAirplane(), 0);
                         Operation op = new Operation(req, -1);

@@ -72,10 +72,11 @@ public class LineChart_AWT extends JFrame {
             }
             } 
                 distaciaTotal.add(soma);
-            dataset.addValue(Integer.valueOf(listOfLists.get(o).size()), "nºoperações", "Aeroporto: "+String.valueOf(o));
+            //dataset.addValue(Integer.valueOf(listOfLists.get(o).size()), "nºoperações", "Aeroporto: "+String.valueOf(o));
         }
         for(int a=0; a<distaciaTotal.size(); a++){
             System.out.println("Distancia total do aeroporto: "+a+" é de: "+distaciaTotal.get(a));
+            dataset.addValue(Integer.valueOf(distaciaTotal.get(a)), "nºoperações", "Aeroporto: "+String.valueOf(a));
         }
         distaciaTotal.clear();
         /*dataset.addValue(15, "schools", "1970");
