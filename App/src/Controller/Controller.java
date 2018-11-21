@@ -12,7 +12,7 @@ public class Controller {
    
     private static MainContainer mainContainer; 
     private static List<ContainerController> ContainerControllers;
-    private static int num_airports=2,num_airplanes=2;
+    private static int num_airports=3,num_airplanes=1;
 
     public static void main(String[] args) 
     {
@@ -48,8 +48,6 @@ public class Controller {
 
     private static void CreatingAgents() throws Exception
     {
-        //Starting agent interface in maincontainer.
-      //  mainContainer.startAgentInPlatform(mainContainer.container,"Interface", "Agents.Interface");
 
         //for each sub container, is necessary to add a single agent with airport role, and multiple agents with airplane role.
         for(ContainerController container : ContainerControllers)
@@ -69,6 +67,11 @@ public class Controller {
             //Creates a agent with airport role per subcontainer.
             mainContainer.startAgentInPlatform(container,"Airport_"+airport_number, "Agents.Airport",arguments);
         }
+        
+        //Starting agent interface in maincontainer.
+            Object[] interfaceArgument = new Object[1];
+            interfaceArgument[0] = num_airports;
+        mainContainer.startAgentInPlatform(mainContainer.container,"Interface", "Agents.Interface", interfaceArgument);
     }
 	
 }

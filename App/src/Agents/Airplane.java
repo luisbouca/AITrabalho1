@@ -254,6 +254,7 @@ public class Airplane extends Agent {
                                     location = flight.getDestination();
                                     destination.setName("Container" + flight.getAirport().getName().substring(8, 9));
                                     System.out.println(getLocalName() + " -> Moving to Container " + destination.getName());
+                                    neighbours.clear();
                                     doMove(destination);
                                     System.out.println("Atterrou");
                                 }
@@ -335,7 +336,8 @@ public class Airplane extends Agent {
                             requestAMS();
                             //If there is any agent that is dangerously closer.
                             if (neighbours.size() > 0) {
-                                negotiate(); //Starts a negotiation.
+                                //negotiate(); //Starts a negotiation.
+                                moving();
                             } else { //Moving normally this airplane.
                                 moving();
                             }

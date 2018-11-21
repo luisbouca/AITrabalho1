@@ -18,7 +18,9 @@ public class Request extends Communication{
         super(identification, sender, receiver);
         this.type = type;
     }
-
+public String getMsg() {
+        return flight.getMsg();
+    }
     public int getType() {
         return type;
     }
