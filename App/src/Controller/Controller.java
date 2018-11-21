@@ -12,7 +12,7 @@ public class Controller {
    
     private static MainContainer mainContainer; 
     private static List<ContainerController> ContainerControllers;
-    private static int num_airports=2,num_airplanes=1;
+    private static int num_airports=2,num_airplanes=2;
 
     public static void main(String[] args) 
     {
