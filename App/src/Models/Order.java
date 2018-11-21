@@ -19,6 +19,9 @@ public class Order extends Communication {
         super(identification, sender, receiver);
         this.flight = flight;
     }   
+    public String getMsg() {
+        return flight.getMsg();
+    }
     public Flight getFlight()
     {
         return this.flight;

@@ -273,9 +273,18 @@ public class Airport extends Agent {
                             break;
                             
                         case ACLMessage.PROPOSE:
+                            List<String> inf = new ArrayList<>();
+                            if(Operations.size()!=0){
+                            for(int i=0; i<Operations.size();i++){
+                                inf.add(Operations.get(i).getMsg());
+                                System.out.println("OPERAÇAOOO: "+Operations.get(i).getMsg());
+                            }
+                            System.out.println("Vou enviar: "+inf.size());
                             JSONObject pacote = new JSONObject();
-                            pacote.put("numAero", allocated_Airplanes.size());
+                            pacote.put("operacoes", inf);
+                            pacote.put("numAero", arg2);
                             sendMessage(ACLMessage.INFORM,new AID[]{(msg.getSender())},pacote.toString());
+                            }
                             
                             break;
                         default:

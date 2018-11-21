@@ -3,23 +3,45 @@ package Models;
 import java.util.Date;
 
 public class Operation {
-    
+
     private Request req;
     private Date date;
     private int type;
     private Order order;
-    private int trackId; 
-    
-    public Operation(Request req,int type) {
+    private int trackId;
+
+    public Operation(Request req, int type) {
         date = new Date();
         this.req = req;
         this.type = type;
     }
 
+    public String getMsg() {
+        String ret = date.toString();
+        switch (type) {
+            case 0:
+                //requeste e type
+                ret = ret+";REQ:"+req.getMsg()+";TIPO:"+type;
+                break;
+            case 1:
+                //request type e track
+                ret = ret+";REQ:"+req.getMsg()+";TIPO:"+type+trackId;
+                break;
+            case 2:
+                ret = ret+";REQ:"+req.getMsg()+";ORDER:"+order.getMsg()+";TIPO:"+type+trackId;
+                //tudo
+                
+                break;
+
+        }
+        //return date.toString() + ";" + trackId + ";" + req.getMsg() + ";" + order.getMsg();
+        return ret;
+    }
+
     public void setOrder(Order order) {
         this.order = order;
     }
-    
+
     public Request getRequest() {
         return req;
     }
@@ -28,11 +50,11 @@ public class Operation {
         return order;
     }
 
-    public int getTackId(){
+    public int getTackId() {
         return trackId;
     }
 
-    public void setTackId(int trackId){
+    public void setTackId(int trackId) {
         this.trackId = trackId;
     }
 
@@ -43,12 +65,9 @@ public class Operation {
     public void setType(int i) {
         type = i;
     }
-    
+
     public void setFlight(Flight i) {
         req.setFlight(i);
     }
-    
-    
-    
-    
+
 }
