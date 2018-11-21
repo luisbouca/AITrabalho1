@@ -22,6 +22,7 @@ import jade.domain.JADEAgentManagement.JADEManagementOntology;
 import jade.domain.JADEAgentManagement.QueryAgentsOnLocation;
 import jade.lang.acl.ACLMessage;
 import jade.tools.gui.AIDAddressList;
+import java.io.Serializable;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -260,8 +261,27 @@ public class Airplane extends Agent {
 
                             }
                             break;
-                        case ACLMessage.REQUEST:
-
+                        case ACLMessage.PROPOSE:
+                            try {
+                                if(receivedPacket.has("Direction")){
+                                    switch(receivedPacket.getInt("Direction")){
+                                        case 0:
+                                            location[0] = location[0]-flight.getSpeed();
+                                            break;
+                                        case 1: 
+                                            location[1] = location[1]+flight.getSpeed();
+                                            break;
+                                        case 2: 
+                                            location[0] = location[0]+flight.getSpeed();
+                                            break;
+                                        case 3: 
+                                            location[1] = location[1]-flight.getSpeed();
+                                            break;
+                                    }
+                                }
+                            }catch(JSONException ex){
+                                
+                            }
                             break;
                         default:
                             block();
@@ -338,117 +358,216 @@ public class Airplane extends Agent {
                     Neighbour obj = neighbours.take();
 
                     System.out.println("agent location" + obj.location[0] + "/" + obj.location[1]);
-                    
-                    int distPlaneX = location[0] - obj.getLocation()[0];
-                    int distPlaneDestX = location[0] - obj.getDestination()[0];
-                    int distDestX = location[0] - flight.getDestination()[0];
-                    
-                    int distPlaneY = location[1] - obj.getLocation()[1];
-                    int distPlaneDestY = location[1] - obj.getDestination()[1];
-                    int distDestY = location[1] - flight.getDestination()[1];
-                    
-                    int distPlaneToPlaneDestY = obj.getLocation()[1] - obj.getDestination()[1];
-                    int distDestToPlaneDestY = flight.getDestination()[1] - obj.getDestination()[1];
-                    
-                    if (distPlaneX == 0) {//neighbour in same X as us
-                        if (distPlaneDestX == 0) {//neighbour destination in same X as us
-                            if (distDestX == 0) {//our destination is in same X as us
-                                if (distPlaneY >0) {//neighbour is below us
-                                    if (distPlaneDestY==0) {//neighbour destination in same possition as us
-                                        if (distDestY >0) {//our destination is below us
-                                            //colision suggest right or left
-                                        }
-                                    }else if(distPlaneDestY>0){//neighbour destination below us
-                                        if(distDestY >0 ){//our destination is below us
-                                            if(distPlaneToPlaneDestY<0 && distDestToPlaneDestY<0){//neighbour destination above neighbour and our destination
-                                                //colision suggest right or left
-                                            }
-                                        }
-                                    }else{//neighbour destination above us
-                                        if(distDestY >0){//our destination is below us
-                                            //colision suggest right or left
-                                            //not 100% true
-                                        }
-                                    }
-                                }else if(distPlaneY<0){//neighbour is above us
-                                    if (distPlaneDestY==0) {//neighbour destination in same possition as us
-                                        if (distDestY <0) {//our destination is above us
-                                            //colision suggest right or left
-                                        }
-                                    }else if(distPlaneDestY>0){//neighbour destination below us
-                                        if(distDestY <0){//our destination is above us
-                                            //colision suggest right or left
-                                            //not 100% true
-                                        }
-                                    }else{//neighbour destination above us
-                                        if(distDestY <0 ){//our destination is above us
-                                            if(distPlaneToPlaneDestY>0 && distDestToPlaneDestY>0){//neighbour destination below neighbour and our destination
-                                                //colision suggest right or left
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (distPlaneDestX > 0) {//neighbour destination is to our left
-                            if (distDestX > 0) {//our destination is to our left
-                                if (distPlaneY>0) {//neighbour below us
-                                    if (distDestToPlaneDestY<0) {//neighbour destination sbove our destination
-                                        //colision suggest top or bottom
-                                    }
-                                }else if (distPlaneY<0) {//neighbour above us
-                                    if (distDestToPlaneDestY>0) {//neighbour destination below our destination
-                                        //colision suggest top or bottom
-                                    }
-                                }
-                            }
-                        } else if (distDestX < 0) {//neighbour and our destination is to our right
-                            if (distPlaneY>0) {//neighbour below us
-                                if (distDestToPlaneDestY<0) {//neighbour destination sbove our destination
-                                    //colision suggest top or bottom
-                                }
-                            }else if (distPlaneY<0) {//neighbour above us
-                                if (distDestToPlaneDestY>0) {//neighbour destination below our destination
-                                    //colision suggest top or bottom
-                                }
-                            }
-                        }
-                    } else if (distPlaneX > 0) {//neighbour to our left
-                        if (distPlaneDestX == 0) {//neighbour destination in same X as us
-                            if (distDestX > 0) {//our destination is to our left
-                                //possible collision Scene 2
-                            }
-                        } else if (distPlaneDestX > 0) {//neighbour destination is to our left
-                            if (distDestX > 0) {//our destination is to our left
-                                //possible collision Scene 2
-                            }
-                        } else if (distDestX == 0) {//our destination is in same X as us
-                            //possible collision Scene 2
-                        } else if (distDestX > 0) {//our destination is to our left
-                            //possible collision Scene 2
-                        } else {
-                            //possible collision Scene 2
-                        }
-                    } else//neighbour to our right
-                    if (distPlaneDestX == 0) {//neighbour destination in same X as us
-                        if (distDestX > 0) {//our destination is to our left
-                            //possible collision Scene 2 inverted
-                        }
-                    } else if (distPlaneDestX > 0) {//neighbour destination is to our left
-                        if (distDestX == 0) {//our destination is in same X as us
-                            //possible collision Scene 2 inverted
-                        } else if (distDestX > 0) {//our destination is to our left
-                            //possible collision Scene 2 inverted
-                        } else {
-                            //possible collision Scene 2 inverted
-                        }
-                    } else if (distDestX < 0) {//our destination is to our right
-                        //possible collision Scene 2 inverted
+                    boolean[] suggestion = checkSuggestion(obj);
+                    JSONObject packet = new JSONObject();
+                    if(suggestion[0]){
+                        packet.put("Direction", 0);
+                    }else if(suggestion[1]){
+                        packet.put("Direction", 1);
+                    }else if(suggestion[2]){
+                        packet.put("Direction", 2);
+                    }else{
+                        packet.put("Direction", 3);
+                        
                     }
-
+                    sendMessage(ACLMessage.PROPOSE, new AID[]{obj.aid}, packet.toString());
                 }
             } catch (Exception ex) {
                 System.console().printf("Exception: " + ex.getMessage());
             }
+        }
+
+        private boolean[] checkSuggestion(Neighbour obj) {
+            boolean[] suggestion = new boolean[4];//left,top,right,bottom
+            
+            int distPlaneX = location[0] - obj.getLocation()[0];
+            int distPlaneDestX = location[0] - obj.getDestination()[0];
+            int distDestX = location[0] - flight.getDestination()[0];
+
+            int distPlaneY = location[1] - obj.getLocation()[1];
+            int distPlaneDestY = location[1] - obj.getDestination()[1];
+            int distDestY = location[1] - flight.getDestination()[1];
+
+            int distPlaneToPlaneDestY = obj.getLocation()[1] - obj.getDestination()[1];
+            int distDestToPlaneDestY = flight.getDestination()[1] - obj.getDestination()[1];
+            int distDestToPlaneY = flight.getDestination()[1] - obj.getLocation()[1];
+
+            if (distPlaneX == 0) {//neighbour in same X as us
+                if (distPlaneDestX == 0) {//neighbour destination in same X as us
+                    if (distDestX == 0) {//our destination is in same X as us
+                        if (distPlaneY > 0) {//neighbour is below us
+                            if (distPlaneDestY == 0) {//neighbour destination in same possition as us
+                                if (distDestY > 0) {//our destination is below us
+                                    suggestion[0] = true;
+                                    suggestion[1] = false;
+                                    suggestion[2] = true;
+                                    suggestion[3] = false;
+                                    //colision suggest right or left
+                                }
+                            } else if (distPlaneDestY > 0) {//neighbour destination below us
+                                if (distDestY > 0) {//our destination is below us
+                                    if (distPlaneToPlaneDestY < 0 && distDestToPlaneDestY < 0) {//neighbour destination above neighbour and our destination
+                                        //colision suggest right or left
+                                        suggestion[0] = true;
+                                        suggestion[1] = false;
+                                        suggestion[2] = true;
+                                        suggestion[3] = false;
+                                    }
+                                }
+                            } else//neighbour destination above us
+                            if (distDestY > 0) {//our destination is below us
+                                //colision suggest right or left
+                                suggestion[0] = true;
+                                suggestion[1] = false;
+                                suggestion[2] = true;
+                                suggestion[3] = false;
+                                //not 100% true
+                            }
+                        } else if (distPlaneY < 0) {//neighbour is above us
+                            if (distPlaneDestY == 0) {//neighbour destination in same possition as us
+                                if (distDestY < 0) {//our destination is above us
+                                    //colision suggest right or left
+                                    suggestion[0] = true;
+                                    suggestion[1] = false;
+                                    suggestion[2] = true;
+                                    suggestion[3] = false;
+                                }
+                            } else if (distPlaneDestY > 0) {//neighbour destination below us
+                                if (distDestY < 0) {//our destination is above us
+                                    //colision suggest right or left
+                                    suggestion[0] = true;
+                                    suggestion[1] = false;
+                                    suggestion[2] = true;
+                                    suggestion[3] = false;
+                                    //not 100% true
+                                }
+                            } else//neighbour destination above us
+                            if (distDestY < 0) {//our destination is above us
+                                if (distPlaneToPlaneDestY > 0 && distDestToPlaneDestY > 0) {//neighbour destination below neighbour and our destination
+                                    //colision suggest right or left
+                                    suggestion[0] = true;
+                                    suggestion[1] = false;
+                                    suggestion[2] = true;
+                                    suggestion[3] = false;
+                                }
+                            }
+                        }
+                    }
+                } else if (distPlaneDestX > 0) {//neighbour destination is to our left
+                    if (distDestX > 0) {//our destination is to our left
+                        if (distPlaneY > 0) {//neighbour below us
+                            if (distDestToPlaneDestY < 0) {//neighbour destination sbove our destination
+                                //colision suggest top or bottom
+                                suggestion[0] = false;
+                                suggestion[1] = true;
+                                suggestion[2] = false;
+                                suggestion[3] = true;
+                            }
+                        } else if (distPlaneY < 0) {//neighbour above us
+                            if (distDestToPlaneDestY > 0) {//neighbour destination below our destination
+                                //colision suggest top or bottom
+                                suggestion[0] = false;
+                                suggestion[1] = true;
+                                suggestion[2] = false;
+                                suggestion[3] = true;
+                            }
+                        }
+                    }
+                } else if (distDestX < 0) {//neighbour and our destination is to our right
+                    if (distPlaneY > 0) {//neighbour below us
+                        if (distDestToPlaneDestY < 0) {//neighbour destination sbove our destination
+                            //colision suggest top or bottom
+                            suggestion[0] = false;
+                            suggestion[1] = true;
+                            suggestion[2] = false;
+                            suggestion[3] = true;
+                        }
+                    } else if (distPlaneY < 0) {//neighbour above us
+                        if (distDestToPlaneDestY > 0) {//neighbour destination below our destination
+                            //colision suggest top or bottom
+                            suggestion[0] = false;
+                            suggestion[1] = true;
+                            suggestion[2] = false;
+                            suggestion[3] = true;
+                        }
+                    }
+                }
+            } else if (distPlaneX > 0) {//neighbour to our left
+                if (distPlaneDestX == 0) {//neighbour destination in same X as us
+                    if (distDestX > 0) {//our destination is to our left
+                        if (distPlaneDestY > 0) {//neighbour destination is below us
+                            if (distDestToPlaneY < 0) {//neighour is above our destination
+                                // colision suggest right or bottom or top
+                                suggestion[0] = false;
+                                suggestion[1] = true;
+                                suggestion[2] = true;
+                                suggestion[3] = true;
+                            }
+                        } else if (distPlaneDestY < 0) {//neighbour destination is above us
+                            if (distDestToPlaneY > 0) {//neighour is below our destination
+                                // colision suggest right or bottom or top
+                                suggestion[0] = false;
+                                suggestion[1] = true;
+                                suggestion[2] = true;
+                                suggestion[3] = true;
+                            }
+                        }
+                    }
+                } else if (distPlaneDestX > 0) {//neighbour destination is to our left
+                    if (distDestX > 0) {//our destination is to our left
+                        //possible collision Scene 2
+                    }
+                } else{//neighbour destination is to our right
+                    if (distDestX == 0) {//our destination is in same X as us
+                        if (distPlaneDestY > 0) {//neighbour destination is below us
+                            if (distDestY > 0) {//our destination is below us
+                                //colission suggest top,right
+                                suggestion[0] = false;
+                                suggestion[1] = true;
+                                suggestion[2] = true;
+                                suggestion[3] = false;
+                            }
+                        } else if (distPlaneDestY < 0) {//neighbour destination is above us
+                            if (distDestY < 0) {//our destination is above us
+                                //colission suggest bottom,right
+                                suggestion[0] = false;
+                                suggestion[1] = false;
+                                suggestion[2] = true;
+                                suggestion[3] = true;
+                            }
+                        }
+                    } else if (distDestX > 0) {//our destination is to our left
+                        if (distPlaneDestY>0) { //neighbour destination is below us
+                            if (distDestToPlaneDestY>0) {//neighbour destination is below our destination
+                                
+                            }
+                            
+                        }
+                        //possible collision Scene 2
+                    } else {//our destination is to our right
+                        //possible collision Scene 2
+                    }
+                }
+            } else//neighbour to our right
+            {
+                if (distPlaneDestX == 0) {//neighbour destination in same X as us
+                    if (distDestX > 0) {//our destination is to our left
+                        //possible collision Scene 2 inverted
+                    }
+                } else if (distPlaneDestX > 0) {//neighbour destination is to our left
+                    if (distDestX == 0) {//our destination is in same X as us
+                        //possible collision Scene 2 inverted
+                    } else if (distDestX > 0) {//our destination is to our left
+                        //possible collision Scene 2 inverted
+                    } else {
+                        //possible collision Scene 2 inverted
+                    }
+                } else if (distDestX < 0) {//our destination is to our right
+                    //possible collision Scene 2 inverted
+                }
+            }
+            return suggestion;
+
         }
 
         private void moving() {
@@ -530,7 +649,8 @@ public class Airplane extends Agent {
                     }
                 }
             } else // if the destination is directly to the right of the current location
-             if (height == 0) {
+            {
+                if (height == 0) {
                     if ((x1 + (speed - yratio)) > 0) {
                         localizacao[0] = x1 + (speed - yratio);
                     } else {
@@ -562,6 +682,7 @@ public class Airplane extends Agent {
                         localizacao[1] = 0;
                     }
                 }
+            }
             return localizacao;
         }
 
@@ -590,7 +711,7 @@ public class Airplane extends Agent {
 
     }
 
-    private class Neighbour {
+    private class Neighbour implements Serializable {
 
         private AID aid;
         private int speed;
