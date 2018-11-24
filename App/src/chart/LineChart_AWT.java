@@ -44,9 +44,9 @@ public class LineChart_AWT extends JFrame {
         this.listOfLists = listOfLists;
         
         JFreeChart barChart = ChartFactory.createBarChart(
-         "NºOperações por Aeroporto",           
+         "Distancia percorrida em cada aeroporto",           
          "Aeroporto",            
-         "Operações",            
+         "Distancia",            
          createDataset(),          
          PlotOrientation.VERTICAL,           
          true, true, false);
@@ -66,25 +66,17 @@ public class LineChart_AWT extends JFrame {
             String[]operacoes = text.split(",");
             for(int i=0; i<operacoes.length; i++){
             pieces = text.split(";");
-            if(pieces.length>=13){
-                System.out.println("Vou somar: "+soma+" com: "+pieces[13]);
+            if(pieces.length>=13){ 
                 soma = soma + Integer.valueOf(pieces[13]);
             }
             } 
                 distaciaTotal.add(soma);
             //dataset.addValue(Integer.valueOf(listOfLists.get(o).size()), "nºoperações", "Aeroporto: "+String.valueOf(o));
         }
-        for(int a=0; a<distaciaTotal.size(); a++){
-            System.out.println("Distancia total do aeroporto: "+a+" é de: "+distaciaTotal.get(a));
-            dataset.addValue(Integer.valueOf(distaciaTotal.get(a)), "nºoperações", "Aeroporto: "+String.valueOf(a));
+        for(int a=0; a<distaciaTotal.size(); a++){ 
+            dataset.addValue(Integer.valueOf(distaciaTotal.get(a)), "unidades", "Aeroporto: "+String.valueOf(a));
         }
         distaciaTotal.clear();
-        /*dataset.addValue(15, "schools", "1970");
-        dataset.addValue(30, "schools", "1980");
-        dataset.addValue(60, "schools", "1990");
-        dataset.addValue(120, "schools", "2000");
-        dataset.addValue(240, "schools", "2010");
-        dataset.addValue(300, "schools", "2014");*/
         return dataset;
     }
 

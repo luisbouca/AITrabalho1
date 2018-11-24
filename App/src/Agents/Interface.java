@@ -34,8 +34,8 @@ public class Interface extends Agent {
         /* for (int i = 0; i < numAeroports; i++) {
             listOfLists.add(new ArrayList<String>());
         }*/
-        /*this.addBehaviour(new Receiver());
-        this.addBehaviour(new showStats(this, 5500));*/
+        this.addBehaviour(new Receiver());
+        this.addBehaviour(new showStats(this, 5500));
         super.setup();
     }
 
@@ -59,11 +59,7 @@ public class Interface extends Agent {
                                     for (int l = 0; l < opera.length; l++) {
                                         listOfLists.get(i).add(opera[l]);
                                     }
-                                }
-                                System.out.println("LIST OF LISTSD: " + listOfLists.size());
-                                System.out.println("--------------------------");
-                                System.out.println("Report:");
-                                System.out.println("--------------------------");
+                                } 
                                 LineChart_AWT chart = new LineChart_AWT(listOfLists);
                                 chart.pack();
                                 RefineryUtilities.centerFrameOnScreen(chart);
