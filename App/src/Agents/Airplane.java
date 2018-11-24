@@ -157,11 +157,8 @@ public class Airplane extends Agent {
                             try {
                                 if (receivedPacket != null) {
                                     if (receivedPacket.has("Flight")) {
-
                                         System.out.println("received flight");
                                         flight = new Flight(receivedPacket.getString("Flight"));
-                                        System.out.println("Informação do voo: " + flight.getDestination()[0] + "," + flight.getDestination()[1]);
-
                                     } else if (receivedPacket.has(Request.Type.Information.toString())) { //Receiving informations from another airplanes
                                         JSONObject subPacket = receivedPacket.getJSONObject(Request.Type.Information.toString());
 
@@ -172,8 +169,8 @@ public class Airplane extends Agent {
                                             //Checking if lat or long is <= than safety_area.
                                             //if(((locationArray.getInt(0) - getLocation()[0]) <= safety_area) || ((locationArray.getInt(1) - getLocation()[1]) <= safety_area))
 
-                                            //if((int) Math.sqrt(((Math.pow((locationArray.getInt(0) - getLocation()[0]), 2)) + (Math.pow((locationArray.getInt(1) - getLocation()[1]), 2))))+0.5 <= safety_area)
-                                            if (true) {
+                                            if((int) Math.sqrt(((Math.pow((locationArray.getInt(0) - getLocation()[0]), 2)) + (Math.pow((locationArray.getInt(1) - getLocation()[1]), 2))))+0.5 <= safety_area){
+                                            //if (true) {
                                                 //Building Neighbour object.
                                                 Neighbour neighbour = new Neighbour();
                                                 neighbour.setAID(msg.getSender());
@@ -336,8 +333,7 @@ public class Airplane extends Agent {
                             requestAMS();
                             //If there is any agent that is dangerously closer.
                             if (neighbours.size() > 0) {
-                                //negotiate(); //Starts a negotiation.
-                                moving();
+                                negotiate(); //Starts a negotiation.
                             } else { //Moving normally this airplane.
                                 moving();
                             }

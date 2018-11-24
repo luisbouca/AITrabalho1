@@ -83,7 +83,6 @@ public class Airport extends Agent {
         }
         //generate the location of the airport from the number of the airport
         location = genGPS(arg1);
-        System.out.println("Sou o aeroporto" + arg1 + " tou no lat:" + location[0] + "|lon:" + location[1]);
 
         // add to the yellow pages
         DFAgentDescription dfd = new DFAgentDescription();
@@ -213,7 +212,7 @@ public class Airport extends Agent {
                                     what.add(receivedPacket.toString());
                                     airports.add(msg.getSender());
                                 }
-                                if (numAeroportosProcessados >= arg2 - 1) {
+                                if (what.size() >= arg2 -1) {
                                     int[] destino = new int[2];
                                     int[] origem = new int[]{location[0], location[1]};
                                     int index = rand.nextInt(what.size());
@@ -224,7 +223,7 @@ public class Airport extends Agent {
                                     Flight flight = new Flight(String.valueOf(arg1), new AID(please.getString("Airplane"),false), passengers, destino, origem, 10, airports.get(index), 50);
                                     for (int i = 0; i < Operations.size(); i++) {
                                         Operation op = Operations.get(i);
-                                        if (op.getRequest().getReceiver().equals(new AID(please.getString("Airplane"),false)) && op.getRequest().getSender().equals(getAID())) {
+                                        if (op.getRequest().getReceiver().equals(new AID(please.getString("Airplane"),false)) && op.getRequest().getSender().equals(getAID()) && op.getType() != 2) {
                                             Operations.get(i).setType(0);
                                             Operations.get(i).setFlight(flight);
                                             i = Operations.size();
@@ -232,7 +231,8 @@ public class Airport extends Agent {
                                     }
                                     //To airport destination
                                     JSONObject packet1 = new JSONObject();
-                                    packet1.put("Airplane", flight.getAirplane().toString());
+                                    packet1.put("Airplane", please.getString("Airplane"));
+                                    System.out.println("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"+please.getString("Airplane"));
                                     sendMessage(ACLMessage.CONFIRM, new AID[]{airports.get(index)}, packet1.toString());
                                     //to airplane
                                     JSONObject packet2 = new JSONObject();
@@ -507,7 +507,7 @@ public class Airport extends Agent {
                         } catch (Exception ex) {
                             System.console().printf("Exception: " + ex.getMessage());
                         }
-                    } else if (track.getType() == 0) {
+                    }
                         //ativate Takeoff operation
                         if (!takeoff.isEmpty()) {
                             try {
@@ -531,9 +531,7 @@ public class Airport extends Agent {
                                 System.console().printf("Exception: " + ex.getMessage());
                             }
                         }
-                    }
-
-                }
+                    }                
             }
         }
 

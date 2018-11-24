@@ -34,8 +34,8 @@ public class Interface extends Agent {
         /* for (int i = 0; i < numAeroports; i++) {
             listOfLists.add(new ArrayList<String>());
         }*/
-        this.addBehaviour(new Receiver());
-        this.addBehaviour(new showStats(this, 5500));
+        /*this.addBehaviour(new Receiver());
+        this.addBehaviour(new showStats(this, 5500));*/
         super.setup();
     }
 
