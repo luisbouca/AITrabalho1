@@ -145,7 +145,6 @@ public class Airplane extends Agent {
                         case ACLMessage.CFP:
                             try {
                                 if (receivedPacket.has("lat") && receivedPacket.has("lon")) {
-                                    System.out.println("received location");
                                     location[0] = receivedPacket.getInt("lat");
                                     location[1] = receivedPacket.getInt("lon");
                                 }
@@ -157,7 +156,6 @@ public class Airplane extends Agent {
                             try {
                                 if (receivedPacket != null) {
                                     if (receivedPacket.has("Flight")) {
-                                        System.out.println("received flight");
                                         flight = new Flight(receivedPacket.getString("Flight"));
                                     } else if (receivedPacket.has(Request.Type.Information.toString())) { //Receiving informations from another airplanes
                                         JSONObject subPacket = receivedPacket.getJSONObject(Request.Type.Information.toString());
@@ -315,7 +313,6 @@ public class Airplane extends Agent {
             if (flight != null) {
                 if (flight.getState() == 1) {
                     distanceTemp = Math.sqrt(((Math.pow((flight.getDestination()[0] - location[0]), 2)) + (Math.pow((flight.getDestination()[1] - location[1]), 2))));
-                    System.out.println("distance=" + distanceTemp);
                     if (distanceTemp < safety_area) {
                         //Faz pedido de atterragem
                         System.out.println("In RANGE");
@@ -354,8 +351,6 @@ public class Airplane extends Agent {
                 while (neighbours.iterator().hasNext()) //It could be more than one agent.
                 {
                     Neighbour obj = neighbours.take();
-
-                    System.out.println("agent location" + obj.location[0] + "/" + obj.location[1]);
                     boolean[] suggestion = checkSuggestion(obj);
                     JSONObject packet = new JSONObject();
                     if(suggestion[0]){
@@ -587,7 +582,6 @@ public class Airplane extends Agent {
             height = y2 - y1;//gets difrence between the points in the y axis
             int yratio = (int) ((ratio * speed) + 0.5);// calculates the ratio with speed
             // if there is no diference between the points in the X axis
-            System.out.println("width = " + width + "|heigh=" + height + "|yratio = " + yratio + "|speed=" + speed + "|ratio =" + ratio);
             if (width == 0) {
                 // if the current location is the destination
                 if (height == 0) {

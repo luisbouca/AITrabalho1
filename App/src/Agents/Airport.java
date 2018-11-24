@@ -192,8 +192,6 @@ public class Airport extends Agent {
                                 }
                             }
                             if (spaces.size() <= max_airplanes) {
-
-                                System.out.println("Sou o aeroporto: " + getLocalName() + "e recebi pedido do: " + msg.getSender().getLocalName());
                                 packet.put("state", 1);
                                 packet.put("lat", location[0]);
                                 packet.put("lon", location[1]);
@@ -206,7 +204,6 @@ public class Airport extends Agent {
                         case ACLMessage.INFORM_IF:
                             if (receivedPacket.has("state")) {
                                 numAeroportosProcessados++;
-                                System.out.println(getLocalName() + ": inquire received" + (numAeroportosProcessados) + "," + (arg2 - 1));
                                 if (receivedPacket.getInt("state") == 1) {
                                     receivedPacket.put("Airport", msg.getSender().toString());
                                     what.add(receivedPacket.toString());
@@ -232,7 +229,6 @@ public class Airport extends Agent {
                                     //To airport destination
                                     JSONObject packet1 = new JSONObject();
                                     packet1.put("Airplane", please.getString("Airplane"));
-                                    System.out.println("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"+please.getString("Airplane"));
                                     sendMessage(ACLMessage.CONFIRM, new AID[]{airports.get(index)}, packet1.toString());
                                     //to airplane
                                     JSONObject packet2 = new JSONObject();
@@ -265,7 +261,6 @@ public class Airport extends Agent {
                                     //Removes from list.
                                     int idx = Operations.indexOf(op);
                                     op.setType(2);
-                                    System.out.println("Changed Operation" + idx + " to inactive");
                                     Operations.set(idx, op);
                                 }
                                 Slot slot = allocated_Airplanes.stream().filter(x -> x.getAirplane().equals(msg.getSender())).findAny().orElse(null);
@@ -273,7 +268,6 @@ public class Airport extends Agent {
                                     //Removes from list.
                                     int idx = allocated_Airplanes.indexOf(slot);
                                     slot.setType(2);
-                                    System.out.println("Changed Slot" + idx + " to not used");
                                     allocated_Airplanes.set(idx, slot);
                                 }
 
@@ -298,7 +292,6 @@ public class Airport extends Agent {
                                     slot.setType(0);
                                     allocated_Airplanes.set(idx, slot);
                                     slot = allocated_Airplanes.get(idx);
-                                    System.out.println("Changed Slot" + idx + " to in storage");
 
                                 }
                                 Operation op = Operations.stream().filter(x -> x.getRequest().getFlight().getAirplane().getName().substring(0, 9).equals(msg.getSender().getName().substring(0, 9))).findAny().orElse(null);
@@ -307,7 +300,6 @@ public class Airport extends Agent {
                                     //Removes from list.
                                     int idx = Operations.indexOf(op);
                                     op.setType(2);
-                                    System.out.println("Changed Operation" + idx + " to inactive");
                                     Operations.set(idx, op);
                                 }
                             } else if (receivedPacket.has("Airplane")) {
@@ -329,9 +321,7 @@ public class Airport extends Agent {
                             if (Operations.size() != 0) {
                                 for (int i = 0; i < Operations.size(); i++) {
                                     inf.add(Operations.get(i).getMsg());
-                                    System.out.println("OPERAÇAOOO: " + Operations.get(i).getMsg());
                                 }
-                                System.out.println("Vou enviar: " + inf.size());
                                 JSONObject pacote = new JSONObject();
                                 pacote.put("operacoes", inf);
                                 pacote.put("numAero", arg2);
@@ -412,7 +402,6 @@ public class Airport extends Agent {
             List<Slot> spaces = new ArrayList<>();
             //Check which airplanes are in storage
             for (Slot s : allocated_Airplanes) {
-                System.out.println(s.getAirplane().getName() + "Airplane type:" + s.getType());
                 if (s.getType() == 0) {
                     spaces.add(s);
                 }

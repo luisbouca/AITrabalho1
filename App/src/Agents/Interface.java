@@ -51,13 +51,8 @@ public class Interface extends Agent {
 
                     switch (msg.getPerformative()) {
                         case ACLMessage.INFORM:
-                            //System.out.println("RECEBI O PACOTE: " + msg.getSender() + "com a msg, " + receivedPacket.getString("operacoes"));
-                            // System.out.println("LISTAAVIOES: " + listaPlanes.size() + " AEROPORTOS: " + numAeroports);
                             listaPlanes.add(receivedPacket.getString("operacoes"));
-                            System.out.println("aaa: " + listaPlanes.size());
                             if (listaPlanes.size() == numAeroports) {
-                                System.out.println("Sim");
-                                System.out.println("LISTA PLANES: " + listaPlanes.size());
                                 for (int i = 0; i < listaPlanes.size(); i++) {
                                     String[] opera = listaPlanes.get(i).split(",");
                                     listOfLists.add(new ArrayList<String>());
@@ -66,15 +61,9 @@ public class Interface extends Agent {
                                     }
                                 }
                                 System.out.println("LIST OF LISTSD: " + listOfLists.size());
-                                //System.out.println("AS operaçoes do avião 0 são: " + listOfLists.get(0).size());
-                                //System.out.println("TOTAL OP POR AERO: " + opera.length);
                                 System.out.println("--------------------------");
                                 System.out.println("Report:");
                                 System.out.println("--------------------------");
-                                for (int o = 0; o < listOfLists.size(); o++) {
-                                    System.out.println("\t\tNumero de Operações do aeroporto: " + o + " " + listOfLists.get(o));
-                                    System.out.println("--------------------------");
-                                }
                                 LineChart_AWT chart = new LineChart_AWT(listOfLists);
                                 chart.pack();
                                 RefineryUtilities.centerFrameOnScreen(chart);
